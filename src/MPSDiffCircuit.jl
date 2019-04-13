@@ -1,5 +1,9 @@
+module MPSDiffCircuit
+
 using Yao, Yao.Blocks
 using QuAlgorithmZoo
+
+export MPSDC
 
 struct MPSDC
     circuit
@@ -28,6 +32,4 @@ struct MPSDC
     end
 end
 
-mps = MPSDC(1,4,2)
-
- 
+end
