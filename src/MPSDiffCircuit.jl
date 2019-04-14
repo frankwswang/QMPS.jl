@@ -1,12 +1,13 @@
-module MPSDiffCircuit
-
 """
 A quick realization of MPS-differentiable-qubit circuit. 
 
 For compatibility please also install in Julia Package mode:
-add Yao
-add https://github.com/QuantumBFS/QuAlgorithmZoo.jl.git 
+pkg> add Yao
+pkg> add https://github.com/QuantumBFS/QuAlgorithmZoo.jl.git 
 """
+
+module MPSDiffCircuit
+using Atom 
 using Yao, Yao.Blocks
 using QuAlgorithmZoo
 
