@@ -26,57 +26,68 @@ struct MPSDC
         (nBitA - vBit -rBit) % rBit != 0 && println("Error: nBlock is not integer!")
         nBlock = Int((nBitA - vBit) / rBit)
         nBit = rBit + vBit
-        cBlocks = MPSblocks(nBit, nBlock, MPSblock)
+        #println("M1\n")
+        MPS = MPSbuilder(nBitA, nBit, nBlock, MPSblock)
+        #println("M2\n")
+        cBlocks = MPS[1]
+        #println("M3\n")
+        cExtend = MPS[2]
+        #println("M4\n")
         cEBlocks = []
         for i = 1:nBlock
-            cBlocks[i] |> autodiff(:QC)
-            push!(cEBlocks, put( nBitA, Tuple((nBitA-rBit*i-vBit+1):(nBitA-rBit*(i-1)),)=>cBlocks[i]) )
+            cBlocks[i] = cBlocks[i] |> autodiff(:QC)
+            #dispatch!(cBlocks[i], :random)
+            #dispatch!(cExtend[i], parameters(cBlocks[i]))
+            #push!(cEBlocks, put( nBitA, Tuple((nBitA-rBit*i-vBit+1):(nBitA-rBit*(i-1)),)=>cBlocks[i]) )
+            push!(cEBlocks, cExtend[i])
         end
-        circuit = chain(nBit,cBlocks)
-        cExtend = chain(nBitA, cEBlocks) 
-        circuit = dispatch!(circuit, :random)
+        circuit = chain(nBit,cBlocks) 
+        dispatch!(circuit, :random)
+        dispatch!(cExtend, parameters(cExtend)) #Has to figure out how to copy parameters correctly!!
         diffs = collect(circuit, AbstractDiff)
         new(circuit, cBlocks, cExtend, cEBlocks, diffs, nBit, nBlock)
     end
 
 end
 
-function MPSblocks(nBit::Int64, nBlock::Int64, blockT::Tuple{String, Int64})
-    if blockT[1] == "DC" # differentiable circuit.
-        depth = blockT[2]
-        GATE = CNOT
-        CXblocks =chain(nBit,
-                    chain(nBit,[put(nBit, ( i,(i-1) )=>GATE) for i = nBit:-1:2]),
-                    put(nBit, ( 1,nBit ) =>GATE)
-        )
-        cBlock = chain(nBit, random_diff_circuit(nBit, depth, pair_ring(nBit)), CXblocks)
-        cBlocks = []        
-        for i=1:nBlock
-            push!(cBlocks, cBlock)
-        end
-    end
-    cBlocks
-end
+## Missing cExtend!!
+# function MPSblocks(nBit::Int64, nBlock::Int64, blockT::Tuple{String, Int64}) 
+#     if blockT[1] == "DC" # differentiable circuit.
+#         depth = blockT[2]
+#         GATE = SWAP
+#         CXblocks =chain(nBit,
+#                     chain(nBit,[put(nBit, ( i,(i-1) )=>GATE) for i = nBit:-1:2]),
+#                     put(nBit, ( 1,nBit ) =>GATE)
+#         )
+#         cBlock = chain(nBit, random_diff_circuit(nBit, depth, pair_ring(nBit)), CXblocks)
+#         cBlocks = []        
+#         for i=1:nBlock
+#             push!(cBlocks, cBlock)
+#         end
+#     end
+#     cBlocks
+# end
 
-function MPSblocks(nBit::Int64, nBlock::Int64, blockT::String)
-    if blockT == "U1" # VQE MPS blocks for U(1) symmetry.
-        cBlock = chain(nBit,
-                       vcat([chain(nBit, repeat(nBit, Rz(0), (i, i-1)), put(nBit, (i, i-1)=>SWAP) ) for i=nBit:-1:2 ],
-                            [chain(nBit, put(nBit, nBit=>Rz(0)), put(nBit, 1=>Rz(0)))],
-                            [put(nBit, (nBit,1)=>SWAP)]
-                        )
-                      ) 
-        cBlocks = []
-        for i = 1:nBlock
-            cBlockOdd = chain(nBit, put(nBit, nBit=>X), cBlock)
-            cBlockEven = cBlock 
-            if i%2 == 1
-                push!(cBlocks, cBlockOdd)
-            else
-                push!(cBlocks, cBlockEven)
-            end
-        end
-    end
+function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64, blockT::String)
+    ## Missing cExtend!!
+    # if blockT == "U1" # VQE MPS blocks for U(1) symmetry.
+    #     cBlock = chain(nBit,
+    #                    vcat([chain(nBit, repeat(nBit, Rz(0), (i, i-1)), put(nBit, (i, i-1)=>SWAP) ) for i=nBit:-1:2 ],
+    #                         [chain(nBit, put(nBit, nBit=>Rz(0)), put(nBit, 1=>Rz(0)))],
+    #                         [put(nBit, (nBit,1)=>SWAP)]
+    #                     )
+    #                   ) 
+    #     cBlocks = []
+    #     for i = 1:nBlock
+    #         cBlockOdd = chain(nBit, put(nBit, nBit=>X), cBlock)
+    #         cBlockEven = cBlock 
+    #         if i%2 == 1
+    #             push!(cBlocks, cBlockOdd)
+    #         else
+    #             push!(cBlocks, cBlockEven)
+    #         end
+    #     end
+    # end
 
     if blockT == "CS" # MPS blocks for 1D cluster state.
         if nBit != 2
@@ -88,8 +99,9 @@ function MPSblocks(nBit::Int64, nBlock::Int64, blockT::String)
         for i =2:nBlock
             push!(cBlocks, chain(nBit,put(nBit, (2,1)=>SWAP), put(nBit, 1=>H), control(nBit, 1, nBit=>Z)))
         end  
+        cExtend = chain(nBitA, vcat([repeat(nBitA,H,Tuple(nBitA:-1:1,))], [control(nBitA, i-1, i=>Z) for i=nBitA:-1:2])) 
     end
-    cBlocks
+    (cBlocks, cExtend)
 end
 
 end
