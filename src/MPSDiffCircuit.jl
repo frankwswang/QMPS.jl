@@ -59,24 +59,27 @@ function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64,
                    blockT::Tuple{String, Int64}, vBit::Int64, rBit::Int64) 
     if blockT[1] == "DC" && rBit == 1 # differentiable circuit.
         depth = blockT[2]
-        # println("s1\n")
-        cBlock = DCbuilder(nBit, depth).block |> autodiff(:QC)
-        # println("s2\n")
-        cBlockLast = chain(nBit,vcat([cBlock], [put(nBit, (i,i+1)=>SWAP ) for i=1:nBit-1])) 
-        # println("s3\n")
+        println("s1\n")
+        swapV1 = chain(nBit, [put(nBit, (i,i+1)=>SWAP ) for i=1:   nBit-1])
+        swap1V = chain(nBit, [put(nBit, (i+1,i)=>SWAP ) for i=nBit-1:-1:1])
+        println("s2\n")
+        cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> autodiff(:QC)
+        dispatch!(cBlockHead, :random)
+        println("s3\n")
+        cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
+        println("s4\n")
         cBlocks = []
         cEBlocks = []        
         for i=1:nBlock
             push!(cBlocks, cBlock)
-            # println("s4_1\n")
-            dispatch!(cBlocks[i], :random)
-            # println("s4_2\n")
-            push!(cEBlocks, put(nBitA, Tuple((nBitA-i-vBit+1):(nBitA-i+1),)=>cBlockLast))
-            # println("s4_3\n")
-            dispatch!(cEBlocks[i], parameters(cBlocks[i]))
+            println("s4_1\n")
+            # dispatch!(cBlocks[i], :random)
+            println("s4_2\n")
+            push!(cEBlocks, put(nBitA, Tuple((nBitA-i-vBit+1):(nBitA-i+1),)=>cBlockHead))
+            println("s4_3\n")
+            # dispatch!(cEBlocks[i], parameters(cBlocks[i]))
         end
-        pop!(cBlocks)
-        push!(cBlocks, cBlockLast)
+        cBlocks[1] = cBlockHead
         circuit = chain(nBit, cBlocks)
         cExtend = chain(nBitA, cEBlocks)
     end
