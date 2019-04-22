@@ -6,39 +6,31 @@ pkg> add Yao
 pkg> add https://github.com/QuantumBFS/QuAlgorithmZoo.jl.git 
 """
 
-module MPSDiffCircuit
+module MPSCircuit
+export setMPSpar
+export DCbuilder
+export MPSC
+export MPSbuilder
+
 using Yao, Yao.Blocks
 using QuAlgorithmZoo
 
-export MPSDC
-export MPSblocks
+struct setMPSpar
+    nBitA
+    vBit
+    rBit
+    nBit
+    nBlock
 
-struct MPSDC
-    circuit  # MPS differentiable circuit
-    cBlocks  # Array of all the MPS blocks in MPS circuit.
-    cExtend  # MPS circuit extended back to where it doesn't reuse any qubit.
-    cEBlocks # Array of all the MPS blocks in extended circuit.
-    diffs    # differentials of MPS circuit.
-    nBit     # Number of lines(bits) of MPS circuit. 
-    nBlock   # Number of blocks in MPS ciruict.
-
-    function MPSDC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1)
+    function setMPSpar(nBitA::Int64, vBit::Int64, rBit::Int64)
         if (nBitA - vBit -rBit) % rBit != 0 
             println("Error: nBlock is not integer!")
             return 0
         end
         nBlock = Int((nBitA - vBit) / rBit)
         nBit = rBit + vBit
-        #println("M1\n")
-        MPS = MPSbuilder(nBitA, nBit, nBlock, MPSblock, vBit, rBit)
-        #println("M2\n")
-        circuit = MPS[1]
-        #println("M3\n")
-        cExtend = MPS[2]
-        diffs = collect(circuit, AbstractDiff)
-        new(circuit, circuit.blocks, cExtend, cExtend.blocks, diffs, nBit, nBlock)
+        new(nBitA, vBit, rBit, nBit, nBlock)
     end
-
 end
 
 struct DCbuilder
@@ -47,6 +39,7 @@ struct DCbuilder
     body       # The differentiable circuit for n depths. 
     head       # The "head" of the circuit(for direct input qubits).
     tail       # The "tail" of the circuit(adding 2 layers of rotaional gates).
+
     function DCbuilder(nBit::Int64, ndepth::Int64)
         body = random_diff_circuit(nBit, ndepth, pair_ring(nBit))
         cTemp = random_diff_circuit(nBit, 2, pair_ring(nBit))
@@ -58,37 +51,37 @@ struct DCbuilder
     end
 end
 
-# Missing cExtend!!
-function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64, 
-                   blockT::Tuple{String, Int64}, vBit::Int64, rBit::Int64) 
-    if blockT[1] == "DC" && rBit == 1 # differentiable circuit.
-        depth = blockT[2]
-        # println("s1\n")
-        swapV1 = chain(nBit, [put(nBit, (i,i+1)=>SWAP ) for i=1:   nBit-1])
-        swap1V = chain(nBit, [put(nBit, (i+1,i)=>SWAP ) for i=nBit-1:-1:1])
-        # println("s2\n")
-        cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> autodiff(:QC)
-        dispatch!(cBlockHead, :random)
-        # println("s3\n")
-        cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
-        # println("s4\n")
-        cBlocks = []
-        cEBlocks = []        
-        for i=1:nBlock
-            push!(cBlocks, cBlock)
-            # println("s4_1\n")
-            # dispatch!(cBlocks[i], :random)
-            # println("s4_2\n")
-            push!(cEBlocks, put(nBitA, Tuple((nBitA-i-vBit+1):(nBitA-i+1),)=>cBlockHead))
-            # println("s4_3\n")
-            # dispatch!(cEBlocks[i], parameters(cBlocks[i]))
-        end
-        cBlocks[1] = cBlockHead
-        circuit = chain(nBit, cBlocks)
-        cExtend = chain(nBitA, cEBlocks)
+struct MPSC
+    circuit  # MPS differentiable circuit.
+    cBlocks  # Array of all the MPS blocks in MPS circuit.
+    cExtend  # MPS circuit extended back to where it doesn't reuse any qubit.
+    cEBlocks # Array of all the MPS blocks in extended circuit.
+    diffs    # Differentials of MPS circuit.
+    nBit     # Number of lines(bits) of MPS circuit. 
+    nBlock   # Number of blocks in MPS ciruict.
+
+    function MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1)
+        par2nd = setMPSpar(nBitA, vBit, rBit)
+        nBlock = par2nd.nBlock
+        nBit = par2nd.nBit
+        #println("M1\n")
+        MPS = MPSbuilder(nBitA, vBit, rBit, MPSblock)
+        #println("M2\n")
+        circuit = MPS[1]
+        #println("M3\n")
+        cExtend = MPS[2]
+        diffs = collect(circuit, AbstractDiff)
+        new(circuit, circuit.blocks, cExtend, cExtend.blocks, diffs, nBit, nBlock)
     end
 
-    if blockT[1] == "DC" && rBit > 1 # differentiable circuit.
+end
+
+function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String, Int64}) 
+    par2nd = setMPSpar(nBitA, vBit, rBit)
+    nBlock = par2nd.nBlock
+    nBit = par2nd.nBit
+
+    if blockT[1] == "DC" # Differentiable circuit.
         depth = blockT[2]
         # println("s1\n")
         swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>SWAP ) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
@@ -115,11 +108,13 @@ function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64,
     (circuit, cExtend)
 end
 
-function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64, 
-                    blockT::String, vBit::Int64, rBit::Int64)
+function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
+    par2nd = setMPSpar(nBitA, vBit, rBit)
+    nBlock = par2nd.nBlock
+    nBit = par2nd.nBit
 
     if blockT == "CS" # MPS blocks for 1D cluster state.
-        if nBit != 2
+        if vBit !=1 || rBit !=1
             println("Error: The nBit=vBit+rBit of cluster state MPS blocks should be 2!\n")
             return 0
         end
@@ -131,6 +126,7 @@ function MPSbuilder(nBitA::Int64, nBit::Int64, nBlock::Int64,
         circuit = chain(nBit,cBlocks)  
         cExtend = chain(nBitA, vcat([repeat(nBitA,H,Tuple(nBitA:-1:1,))], [control(nBitA, i-1, i=>Z) for i=nBitA:-1:2])) 
     end
+    
     (circuit, cExtend)
 end
 
