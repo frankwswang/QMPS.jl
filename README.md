@@ -23,7 +23,7 @@ __nBlock__|Number of blocks in the MPS ciruict.
 ## Installation
 Please type `]` in Julia REPL to enter `Pkg` mode, then type:
 ```
-pkg> add https://github.com/frankwswang/MPSDiffCircuit.jl.git
+pkg> add https://github.com/frankwswang/MPSCircuit.jl.git
 ``` 
 
 ## Dependent Packges
