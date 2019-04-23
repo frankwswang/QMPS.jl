@@ -8,13 +8,13 @@ A quick realization of MPS(Matrix Product State)-qubit circuit.
 # Elements of the struct MPSC
 Elements | Meanings
 ------------ | -------------
-__circuit__|MPS differentiable circuit.
+__circuit__|MPS circuit.
 __cBlocks__|Array of all the MPS blocks in MPS circuit.
-__cExtend__|MPS circuit extended back to where it doesn't reuse any qubit.
-__cEBlocks__|Array of all the MPS blocks in extended circuit.
-__diffs__|Differentials of MPS circuit.
-__nBit__|Number of lines(bits) of MPS circuit. 
-__nBlock__|Number of blocks in MPS ciruict.
+__cExtend__|The MPS circuit extended back to where it doesn't reuse any qubit.
+__cEBlocks__|Array of all the MPS blocks in the Extended circuit.
+__diffs__|Differentials of the MPS circuit if applicable.
+__nBit__|Number of lines(bits) of the MPS circuit. 
+__nBlock__|Number of blocks in the MPS ciruict.
 
 # Setup Guide
 ## Julia Environment
@@ -44,4 +44,4 @@ pkg> add https://github.com/QuantumBFS/QuAlgorithmZoo.jl.git
 * Variational Quantum Eigensolver with Fewer Qubits ([pdf](https://arxiv.org/pdf/1902.02663.pdf)), [arXiv:1902.02663](https://arxiv.org/abs/1902.02663), Jin-Guo Liu, Yihong Zhang, Yuan Wan and Lei Wang
 
 # License
-MPSDiffCircuit.jl is released under Apache License 2.0.
+MPSCircuit.jl is released under Apache License 2.0.

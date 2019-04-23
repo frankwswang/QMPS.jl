@@ -1,9 +1,13 @@
 """
-A quick realization of MPS-differentiable-qubit circuit. 
+A quick realization of MPS-qubit circuit. 
 
 For compatibility please also install in Julia Package mode:
 pkg> add Yao
 pkg> add https://github.com/QuantumBFS/QuAlgorithmZoo.jl.git 
+
+Reference: 
+    Jin-Guo Liu, Yihong Zhang, Yuan Wan and Lei Wang,
+    Variational Quantum Eigensolver with Fewer Qubits(arXiv:1902.02663)
 """
 
 module MPSCircuit
@@ -15,12 +19,13 @@ export MPSbuilder
 using Yao, Yao.Blocks
 using QuAlgorithmZoo
 
+# Structure of basic parameters. 
 struct setMPSpar
-    nBitA
-    vBit
-    rBit
-    nBit
-    nBlock
+    nBitA  # Number of lines(bits) in the Extended circuit. 
+    vBit   # Number of virtual bits in the MPS circuit.
+    rBit   # Number of reusable bits in the MPS circuit.
+    nBit   # Number of lines(bits) in the MPS circuit.
+    nBlock # Number of  MPS blocks in the MPS circuit. 
 
     function setMPSpar(nBitA::Int64, vBit::Int64, rBit::Int64)
         if (nBitA - vBit -rBit) % rBit != 0 
@@ -33,12 +38,13 @@ struct setMPSpar
     end
 end
 
+# Structure of elements may needed for a Differentiable circuit. 
 struct DCbuilder
-    block      # The Block for onr single depth.
-    Cblocks    # The whole Blocks for n depths.
-    body       # The differentiable circuit for n depths. 
-    head       # The "head" of the circuit(for direct input qubits).
-    tail       # The "tail" of the circuit(adding 2 layers of rotaional gates).
+    block   # The block for 1 depth.
+    Cblocks # The whole Blocks for n depths.
+    body    # The Differentiable circuit for n depths. 
+    head    # The "head" of the Differentiable circuit(if directly input bits).
+    tail    # The "tail" of the Differentiable circuit(2 layers of rotaional gates).
 
     function DCbuilder(nBit::Int64, ndepth::Int64)
         body = random_diff_circuit(nBit, ndepth, pair_ring(nBit))
@@ -51,14 +57,15 @@ struct DCbuilder
     end
 end
 
+# Structure of elements MPSCircuit.jl provides.
 struct MPSC
-    circuit  # MPS differentiable circuit.
-    cBlocks  # Array of all the MPS blocks in MPS circuit.
-    cExtend  # MPS circuit extended back to where it doesn't reuse any qubit.
-    cEBlocks # Array of all the MPS blocks in extended circuit.
-    diffs    # Differentials of MPS circuit.
-    nBit     # Number of lines(bits) of MPS circuit. 
-    nBlock   # Number of blocks in MPS ciruict.
+    circuit  # MPS circuit.
+    cBlocks  # Array of all the MPS blocks in the MPS circuit.
+    cExtend  # The MPS circuit extended back to where it doesn't reuse any qubit.
+    cEBlocks # Array of all the MPS blocks in the Extended circuit.
+    diffs    # Differentials of the MPS circuit if applicable.
+    nBit     # Number of lines(bits) of the MPS circuit. 
+    nBlock   # Number of blocks in the MPS ciruict.
 
     function MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1)
         par2nd = setMPSpar(nBitA, vBit, rBit)
@@ -76,6 +83,7 @@ struct MPSC
 
 end
 
+# Methods for creating different types of MPS circuits.
 function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String, Int64}) 
     par2nd = setMPSpar(nBitA, vBit, rBit)
     nBlock = par2nd.nBlock
