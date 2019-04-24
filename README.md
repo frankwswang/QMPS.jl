@@ -12,7 +12,7 @@ __circuit__|MPS circuit.
 __cBlocks__|Array of all the MPS blocks in MPS circuit.
 __cExtend__|The MPS circuit extended back to where it doesn't reuse any qubit.
 __cEBlocks__|Array of all the MPS blocks in the Extended circuit.
-__diffs__|Differentials of the MPS circuit if applicable.
+__dGates__|Differentiable gates of the MPS circuit if applicable.
 __nBit__|Number of lines(bits) of the MPS circuit. 
 __nBlock__|Number of blocks in the MPS ciruict.
 

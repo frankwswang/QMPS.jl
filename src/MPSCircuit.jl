@@ -63,7 +63,7 @@ struct MPSC
     cBlocks  # Array of all the MPS blocks in the MPS circuit.
     cExtend  # The MPS circuit extended back to where it doesn't reuse any qubit.
     cEBlocks # Array of all the MPS blocks in the Extended circuit.
-    diffs    # Differentials of the MPS circuit if applicable.
+    dGates   # Differentiable gates of the MPS circuit if applicable.
     nBit     # Number of lines(bits) of the MPS circuit. 
     nBlock   # Number of blocks in the MPS ciruict.
 
@@ -77,8 +77,8 @@ struct MPSC
         circuit = MPS[1]
         #println("M3\n")
         cExtend = MPS[2]
-        diffs = collect(circuit, AbstractDiff)
-        new(circuit, circuit.blocks, cExtend, cExtend.blocks, diffs, nBit, nBlock)
+        dGates = collect(circuit, AbstractDiff)
+        new(circuit, circuit.blocks, cExtend, cExtend.blocks, dGates, nBit, nBlock)
     end
 
 end
