@@ -16,8 +16,8 @@ export DCbuilder
 export MPSC
 export MPSbuilder
 
-using Yao, Yao.Blocks
-using QuAlgorithmZoo
+using Yao, Yao.ConstGate
+include("Diff.jl")
 
 # Structure of basic parameters. 
 struct setMPSpar
@@ -47,12 +47,12 @@ struct DCbuilder
     tail    # The "tail" of the Differentiable circuit(2 layers of rotaional gates).
 
     function DCbuilder(nBit::Int64, ndepth::Int64)
-        body = random_diff_circuit(nBit, ndepth, pair_ring(nBit))
-        cTemp = random_diff_circuit(nBit, 2, pair_ring(nBit))
-        block = chain(nBit, cTemp.blocks[3:4])
-        Cblocks = chain(nBit, repeat([block],ndepth) )
-        head = chain(nBit, cTemp.blocks[1:2])
-        tail = cTemp.blocks[end]
+        block = chain(nBit, vcat([repeat(nBit, Rz(0))], [repeat(nBit, Rx(0))], [repeat(nBit, Rz(0))], 
+                                    [control(nBit, i, (i-1)=>X) for i=nBit:-1:2], control(nBit, 1, nBit=>X)))
+        tail = chain(nBit, repeat(nBit, Rz(0)), repeat(nBit, Rx(0)))
+        head = block[2:end]
+        Cblocks = chain(nBit, repeat([block],ndepth))
+        body = chain(nBit, vcat([head], repeat([block],ndepth), [tail])) 
         new(block, Cblocks, body, head, tail)
     end
 end
@@ -77,7 +77,7 @@ struct MPSC
         circuit = MPS[1]
         #println("M3\n")
         cExtend = MPS[2]
-        dGates = collect(circuit, AbstractDiff)
+        dGates = collect_blocks(AbstractDiff, circuit)
         new(circuit, circuit.blocks, cExtend, cExtend.blocks, dGates, nBit, nBlock)
     end
 
@@ -92,10 +92,10 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String
     if blockT[1] == "DC" # Differentiable circuit.
         depth = blockT[2]
         # println("s1\n")
-        swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>SWAP ) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
-        swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>SWAP ) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
+        swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>ConstGate.SWAP ) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
+        swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>ConstGate.SWAP ) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
         # println("s2\n")
-        cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> autodiff(:QC)
+        cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff
         dispatch!(cBlockHead, :random)
         # println("s3\n")
         cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
@@ -129,7 +129,7 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
         cBlocks = []
         push!(cBlocks, chain(nBit, repeat(nBit,H,(2,1)), control(nBit, 1, nBit=>Z)))
         for i =2:nBlock
-            push!(cBlocks, chain(nBit,put(nBit, (2,1)=>SWAP), put(nBit, 1=>H), control(nBit, 1, nBit=>Z)))
+            push!(cBlocks, chain(nBit,put(nBit, (2,1)=>ConstGate.SWAP), put(nBit, 1=>H), control(nBit, 1, nBit=>Z)))
         end
         circuit = chain(nBit,cBlocks)  
         cExtend = chain(nBitA, vcat([repeat(nBitA,H,Tuple(nBitA:-1:1,))], [control(nBitA, i-1, i=>Z) for i=nBitA:-1:2])) 
