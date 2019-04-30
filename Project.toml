@@ -6,5 +6,4 @@ version = "0.2.1"
 [deps]
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
