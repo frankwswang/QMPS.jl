@@ -82,7 +82,7 @@ struct MPSC
             if length(dGates) == length(dBlocksPar)
                 pars = [parameters(dGates[i])[1] for i=1:length(dGates)] 
                 pars .= dBlocksPar
-                dispatch!(dGates, pars) 
+                dispatch!.(dGates, pars) 
             else
                 println("The number of elements in dBlocksPar is not correct!!")
                 return 1
