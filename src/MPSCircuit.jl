@@ -78,13 +78,13 @@ struct MPSC
         #println("M3\n")
         cExtend = MPS[2]
         dGates = collect_blocks(AbstractDiff, circuit)
-        if typeof(dBlocksPar) == Array
+        if typeof(dBlocksPar) <: Array
             if length(dGates) == length(dBlocksPar)
                 pars = [parameters(dGates[i])[1] for i=1:length(dGates)] 
                 pars .= dBlocksPar
                 dispatch!(dGates, pars) 
             else
-                println("The number of input parameters of dBlocks is not correct!!")
+                println("The number of elements in dBlocksPar is not correct!!")
                 return 1
             end
         elseif dBlocksPar != 0
