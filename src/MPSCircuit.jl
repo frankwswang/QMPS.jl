@@ -67,7 +67,7 @@ struct MPSC
     nBit     # Number of lines(bits) of the MPS circuit. 
     nBlock   # Number of blocks in the MPS ciruict.
 
-    function MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1)
+    function MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1;dBlocksPar=0)
         par2nd = setMPSpar(nBitA, vBit, rBit)
         nBlock = par2nd.nBlock
         nBit = par2nd.nBit
@@ -78,6 +78,20 @@ struct MPSC
         #println("M3\n")
         cExtend = MPS[2]
         dGates = collect_blocks(AbstractDiff, circuit)
+        if typeof(dBlocksPar) == Array
+            if length(dGates) == length(dBlocksPar)
+                pars = [parameters(dGates[i])[1] for i=1:length(dGates)] 
+                pars .= dBlocksPar
+                dispatch!(dGates, pars) 
+            else
+                println("The number of input parameters of dBlocks is not correct!!")
+                return 1
+            end
+        elseif dBlocksPar != 0
+            println("Invalid parameters input!! parameters should be collected in Arrays.")
+                return 1
+        else
+        end 
         new(circuit, circuit.blocks, cExtend, cExtend.blocks, dGates, nBit, nBlock)
     end
 
