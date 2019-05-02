@@ -1,7 +1,12 @@
+"""
+Realizing functions of selecting differentiable blocks and doing differentiations.
+"""
+
 export Rotor, AbstractDiff, DiffBlock, QDiff, diff, opdiff
 import Yao: expect, content, chcontent, mat, apply!
-using StatsBase
-using MacroTools:@forward
+# Reminder of dependent packages.
+## using StatsBase
+## using MacroTools:@forward
 
 # Basic type for differentiation.
 abstract type AbstractDiff{GT, N, T} <: TagBlock{GT, N, T} end
@@ -77,4 +82,3 @@ Operator differentiation.
     r1, r2 = _perturb(()->expect(op, psifunc()) |> real, diffblock, π/2)
     diffblock.grad = (r2 - r1)/2
 end
-
