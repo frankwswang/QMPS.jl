@@ -79,6 +79,6 @@ end
 Operator differentiation.
 """
 @inline function opdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock)
-    r1, r2 = _perturb(()->expect(op, psifunc()) |> real, diffblock, π/2)
+    r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
     diffblock.grad = (r2 - r1)/2
 end
