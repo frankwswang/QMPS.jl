@@ -7,18 +7,25 @@ export DCbuilder, MPSbuilder
 # Structure of elements may needed for a Differentiable circuit. 
 struct DCbuilder
     block   # The block for 1 depth.
-    Cblocks # The whole Blocks for n depths.
+    blocks  # The whole Blocks for n depths.
+    Cblocks # The whole Blocks chained.
     body    # The Differentiable circuit for n depths. 
     head    # The "head" of the Differentiable circuit(if directly input bits).
     tail    # The "tail" of the Differentiable circuit(2 layers of rotaional gates).
 
-    function DCbuilder(nBit::Int64, ndepth::Int64)
-        block = chain(nBit, vcat([repeat(nBit, Rz(0))], [repeat(nBit, Rx(0))], [repeat(nBit, Rz(0))], 
-                                    [control(nBit, i, (i-1)=>X) for i=nBit:-1:2], control(nBit, 1, nBit=>X)))
-        tail = chain(nBit, repeat(nBit, Rz(0)), repeat(nBit, Rx(0)))
-        head = block[2:end]
-        Cblocks = chain(nBit, repeat([block],ndepth))
-        body = chain(nBit, vcat([head], repeat([block],ndepth), [tail])) 
+    function DCbuilder(nBit::Int64, ndepth::Int64) #DON'T USE repeat to avoid POINTER side-effect!
+        block = chain(nBit, vcat([put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
+                                 [put(nBit, i=>Rx(0)) for i=nBit:-1:1], 
+                                 [put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
+                                 [control(nBit, i, (i-1)=>X) for i=nBit:-1:2], 
+                                 control(nBit, 1, nBit=>X)))
+        tail = chain(nBit, vcat([put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
+                                [put(nBit, i=>Rx(0)) for i=nBit:-1:1]))
+        head = deepcopy(block[2:end])
+        blocks = []
+        for i=1:ndepth push!(blocks, block) end
+        Cblocks = chain(nBit, blocks)
+        body = chain(nBit, vcat([head], Cblocks, [tail])) 
         new(block, Cblocks, body, head, tail)
     end
 end
@@ -35,20 +42,21 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String
         swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>ConstGate.SWAP ) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
         swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>ConstGate.SWAP ) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
         # println("s2\n")
+        # dispatch!(cBlockHead, :random)
         cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff
-        dispatch!(cBlockHead, :random)
-        # println("s3\n")
-        cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
-        # println("s4\n")
         cBlocks = []
         cEBlocks = []        
         for i=1:nBlock
+            # println("s3\n")
+            cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff
+            # println("s4\n")
+            cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
             push!(cBlocks, cBlock)
             # println("s4_1\n")
             push!(cEBlocks, put(nBitA, Tuple((nBitA-i*rBit-vBit+1):(nBitA-(i-1)*rBit),)=>cBlockHead))
             # println("s4_2\n")
         end
-        cBlocks[1] = cBlockHead
+        cBlocks[1] = cEBlocks[1]
         circuit = chain(nBit, cBlocks)
         cExtend = chain(nBitA, cEBlocks)
     end

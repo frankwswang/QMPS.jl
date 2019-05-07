@@ -45,6 +45,7 @@ struct MPSC
         circuit = MPS[1]
         #println("M3\n")
         cExtend = MPS[2]
+        dispatch!(circuit, :random)
         dGates = collect_blocks(AbstractDiff, circuit)
         if typeof(dBlocksPar) <: Array
             if length(dGates) == length(dBlocksPar)
