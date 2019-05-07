@@ -7,25 +7,24 @@ export DCbuilder, MPSbuilder
 # Structure of elements may needed for a Differentiable circuit. 
 struct DCbuilder
     block   # The block for 1 depth.
-    blocks  # The whole Blocks for n depths.
-    Cblocks # The whole Blocks chained.
+    Cblocks # The Blocks chained except head and tail.
     body    # The Differentiable circuit for n depths. 
     head    # The "head" of the Differentiable circuit(if directly input bits).
     tail    # The "tail" of the Differentiable circuit(2 layers of rotaional gates).
 
     function DCbuilder(nBit::Int64, ndepth::Int64) #DON'T USE repeat to avoid POINTER side-effect!
-        block = chain(nBit, vcat([put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
-                                 [put(nBit, i=>Rx(0)) for i=nBit:-1:1], 
-                                 [put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
-                                 [control(nBit, i, (i-1)=>X) for i=nBit:-1:2], 
-                                 control(nBit, 1, nBit=>X)))
-        tail = chain(nBit, vcat([put(nBit, i=>Rz(0)) for i=nBit:-1:1], 
-                                [put(nBit, i=>Rx(0)) for i=nBit:-1:1]))
+        block = chain(nBit, vcat([chain(nBit,[put(nBit, i=>Rz(0)) for i=nBit:-1:1])], 
+                                 [chain(nBit,[put(nBit, i=>Rx(0)) for i=nBit:-1:1])], 
+                                 [chain(nBit,[put(nBit, i=>Rz(0)) for i=nBit:-1:1])], 
+                                 [chain(nBit, vcat([control(nBit, i, (i-1)=>X) for i=nBit:-1:2], 
+                                                   [control(nBit, 1, nBit=>X)]))] ))
+        tail = chain(nBit, vcat([chain(nBit,[put(nBit, i=>Rz(0)) for i=nBit:-1:1])], 
+                                [chain(nBit,[put(nBit, i=>Rx(0)) for i=nBit:-1:1])]))
         head = deepcopy(block[2:end])
         blocks = []
-        for i=1:ndepth push!(blocks, block) end
+        for i=1:ndepth push!(blocks, deepcopy(block)) end
         Cblocks = chain(nBit, blocks)
-        body = chain(nBit, vcat([head], Cblocks, [tail])) 
+        body = chain(nBit, vcat([head], blocks, [tail])) 
         new(block, Cblocks, body, head, tail)
     end
 end
@@ -44,11 +43,11 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String
         # println("s2\n")
         # dispatch!(cBlockHead, :random)
         cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff
-        cBlocks = []
-        cEBlocks = []        
-        for i=1:nBlock
+        cBlocks = [cBlockHead]
+        cEBlocks = [put(nBitA, Tuple((nBitA-rBit-vBit+1):nBitA,)=>cBlockHead)]         
+        for i=2:nBlock
             # println("s3\n")
-            cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff
+            cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> diff 
             # println("s4\n")
             cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
             push!(cBlocks, cBlock)
@@ -56,8 +55,9 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String
             push!(cEBlocks, put(nBitA, Tuple((nBitA-i*rBit-vBit+1):(nBitA-(i-1)*rBit),)=>cBlockHead))
             # println("s4_2\n")
         end
-        cBlocks[1] = cEBlocks[1]
+        # println("s5\n")
         circuit = chain(nBit, cBlocks)
+        # println("s6\n")
         cExtend = chain(nBitA, cEBlocks)
     end
 
