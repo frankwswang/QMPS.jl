@@ -5,8 +5,8 @@ A quick realization of MPS(Matrix Product State)-qubit circuit.
 - Cluster state
 - Differentiable circuit constructed state
 
-## Elements of the struct MPSC
-Elements | Meanings
+## Fields of the struct MPSC
+Fields | Meanings
 ------------ | -------------
 __circuit__|MPS circuit.
 __cBlocks__|Array of all the MPS blocks in MPS circuit.
