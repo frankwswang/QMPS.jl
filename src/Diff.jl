@@ -1,7 +1,7 @@
 #= 
 Realizing functions of selecting differentiable blocks and doing differentiations.
 =#
-export Rotor, AbstractDiff, DiffBlock, QDiff, markDiff, opdiff
+export Rotor, AbstractDiff, DiffBlock, QDiff, markDiff, getQdiff, getNdiff
 import Yao: content, chcontent, mat, apply!
 # Reminder of dependent packages.
 ## using StatsBase
@@ -42,7 +42,7 @@ end
 
 #### Functions ##### 
 """
-    markDiff(block::AbstractBlock) -> AbstractBlock
+    markDiff(block::AbstractBlock) -> block::AbstractBlock
 Mark differentiable items in a block tree(e.g.: ChainBlock) as differentiable.
 """
 function markDiff(blk::AbstractBlock)
@@ -56,10 +56,10 @@ markDiff(block::ControlBlock) = block
 
 
 """
-    opdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock) -> diffblock.grad::Real
+    getQdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock) -> diffblock.grad::Float64
 Operator differentiation.
 """
-@inline function opdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock)
+@inline function getQdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock)
     r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
     diffblock.grad = (r2 - r1)/2
 end
@@ -80,4 +80,17 @@ end
     r2 = func()
     dispatch!(-, gate, (δ,))
     r1, r2
+end
+
+"""
+    qetNdiff(overlapFunc::Function, dGate::AbstractDiff; δ::Real=0.01) -> diffblock.grad::Float64
+Operator differentiation.
+"""
+function getNdiff(overlapFunc::Function, gate::AbstractDiff; δ::Real=0.01)
+    dispatch!(-,gate,δ)
+    o1 = overlapFunc()
+    dispatch!(+,gate,2δ)
+    o2 = overlapFunc()
+    dispatch!(-,gate,δ)
+    gate.grad =  (o2-o1)/(2δ)
 end
