@@ -34,8 +34,10 @@ end
 
 
 """
-    MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar=0)
+    MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar=0)
 Structure of related elements of MPS circuit.
+\n`blockT` = ("DC", depth) stands for "Differentiable circuit".
+\n`blockT` = "CS" stands for "cluster state".
 \n `dBlocksPar` is the array of the parameters for Differentiable blocks in the circuit. 
 \nFields:
 \n`circuit::ChainBlock`:               MPS circuit.
@@ -56,11 +58,11 @@ struct MPSC
     nBit::Int64                       # Number of lines(bits) of the MPS circuit. 
     nBlock::Int64                     # Number of blocks in the MPS ciruict.
 
-    function MPSC(MPSblock, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar::Array{Float64,1}=[0.0])
+    function MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar::Array{Float64,1}=[0.0])
         par2nd = setMPSpar(nBitA, vBit, rBit)
         nBlock = par2nd.nBlock
         nBit = par2nd.nBit
-        MPS = MPSbuilder(nBitA, vBit, rBit, MPSblock)
+        MPS = MPSbuilder(nBitA, vBit, rBit, blockT)
         circuit = MPS[1]
         cExtend = MPS[2]
         dispatch!(circuit, :random)

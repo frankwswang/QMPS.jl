@@ -1,5 +1,6 @@
 #= 
 Realizing functions of selecting differentiable blocks and doing differentiations.
+Reference: https://github.com/QuantumBFS/QuAlgorithmZoo.jl.
 =#
 export Rotor, AbstractDiff, DiffBlock, QDiff, markDiff, getQdiff, getNdiff
 import Yao: content, chcontent, mat, apply!
@@ -81,6 +82,7 @@ end
     dispatch!(-, gate, (δ,))
     r1, r2
 end
+
 
 """
     getNdiff(overlapFunc::Function, dGate::AbstractDiff; δ::Real=0.01) -> diffblock.grad::Float64
