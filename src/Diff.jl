@@ -83,7 +83,7 @@ end
 end
 
 """
-    qetNdiff(overlapFunc::Function, dGate::AbstractDiff; δ::Real=0.01) -> diffblock.grad::Float64
+    getNdiff(overlapFunc::Function, dGate::AbstractDiff; δ::Real=0.01) -> diffblock.grad::Float64
 Operator differentiation.
 """
 function getNdiff(overlapFunc::Function, gate::AbstractDiff; δ::Real=0.01)
