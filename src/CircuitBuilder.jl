@@ -55,11 +55,11 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String
         depth = blockT[2]
         swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>SWAP) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
         swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>SWAP) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
-        cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> markDiff
+        cBlockHead = chain(nBit, DCbuilder(nBit, depth).Cblocks, swapV1) |> markDiff
         cBlocks = [cBlockHead]
         cEBlocks = [put(nBitA, Tuple((nBitA-rBit-vBit+1):nBitA,)=>cBlockHead)]         
         for i=2:nBlock
-            cBlockHead = chain(nBit, DCbuilder(nBit, depth).block, swapV1) |> markDiff 
+            cBlockHead = chain(nBit, DCbuilder(nBit, depth).Cblocks, swapV1) |> markDiff 
             cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
             push!(cBlocks, cBlock)
             push!(cEBlocks, put(nBitA, Tuple((nBitA-i*rBit-vBit+1):(nBitA-(i-1)*rBit),)=>cBlockHead))
