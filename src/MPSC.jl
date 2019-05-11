@@ -1,7 +1,7 @@
 #=
 Main functions to build MPS-circuit.
 =#
-export setMPSpar, MPSC
+export setMPSpar, MPSC, MPSDCpar
 
 
 """
@@ -34,11 +34,52 @@ end
 
 
 """
+    MPSDCpar(circuit::ChainBlock)
+Get the circuit parameters of a MPS-DC circuit or MPS-DC extended circuit.
+\nFields:
+\n`nBitA::Int64`: Number of qubits(lines) in the MPS-DC extended circuit.
+\n`vBit::Int64`:  Number of virtual qubits in the MPS-DC circuit.
+\n`rBit::Int64`:  Number of reusable qubits in the MPS-DC circuit.
+\n`nBit::Int64`:  Number of qubits(lines) in the MPS-DC circuit.
+\n`depth::Int64`: Depth(number of layers) of each DC block in the MPS-DC circuit.
+"""
+struct MPSDCpar
+    nBitA::Int64 # Number of qubits(lines) in the MPS-DC extended circuit.
+    vBit::Int64  # Number of virtual qubits in the MPS-DC circuit.
+    rBit::Int64  # Number of reusable qubits in the MPS-DC circuit.
+    nBit::Int64  # Number of qubits(lines) in the MPS-DC circuit.
+    depth::Int64 # Depth(number of layers) of each DC block in the MPS-DC circuit.
+    
+    function MPSDCpar(circuit::ChainBlock)
+        if typeof(circuit[1]) == ChainBlock{nqubits(circuit),Complex{Float64}}
+            # MPSC().circuit[1]::ChainBlock
+            rBit = circuit[1][2][1].locs[1]
+            nBit = nqubits(circuit)
+            vBit = nBit - rBit
+            depth = length(circuit[1][1])
+            nBitA = vBit + rBit*length(circuit)
+        elseif typeof(circuit[1]) <: AbstractContainer
+            # MPSC().cExtend[1]::PutBlock
+            rBit = content(circuit[1])[2][1].locs[1]
+            nBit = nqubits(content(circuit[1]))
+            vBit = nBit - rBit
+            depth = length(content(circuit[1])[1])
+            nBitA = nqubits(circuit) 
+        else
+            println("ERROR: Input circuit is not supported by the function!")
+            return 1
+        end
+    new(nBitA, vBit, rBit, nBit, depth)
+    end
+end
+
+
+"""
     MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar=0)
 Structure of related elements of MPS circuit.
 \n`blockT` = ("DC", depth) stands for "Differentiable circuit".
 \n`blockT` = "CS" stands for "cluster state".
-\n `dBlocksPar` is the array of the parameters for Differentiable blocks in the circuit. 
+\n`dBlocksPar` is the array of the parameters for Differentiable blocks in the circuit. 
 \nFields:
 \n`circuit::ChainBlock`:               MPS circuit.
 \n`cBlocks::Array{CompositeBlock,1}`:  Array of all the MPS blocks in the MPS circuit.
