@@ -13,18 +13,18 @@ import Yao: content, chcontent, mat, apply!
 abstract type AbstractDiff{GT, N, T} <: TagBlock{GT, N} end
 Base.adjoint(df::AbstractDiff) = Daggered(df)
 istraitkeeper(::AbstractDiff) = Val(true)
-const Rotor{N, T} = Union{RotationGate{N, T}, PutBlock{N, <:Any, <:RotationGate, <:Complex{T}}}
+const Rotor{N, T} = Union{RotationGate{N, T}, PutBlock{N, <:Any, <:RotationGate{<:Any, T}}}
 const CphaseGate{N, T} = ControlBlock{N,<:ShiftGate{T},<:Any}
 const DiffBlock{N, T} = Union{Rotor{N, T}, CphaseGate{N, T}}
 
 
 # Quantum differentiation block.
 """
-    QDiff{GT, N, T} <: AbstractDiff{GT, N, Complex{T}}
+    QDiff{GT, N, T} <: AbstractDiff{GT, N, T}
     QDiff(block) -> QDiff
 Mark a block as quantum differentiable.
 """
-mutable struct QDiff{GT, N, T} <: AbstractDiff{GT, N, Complex{T}}
+mutable struct QDiff{GT, N, T} <: AbstractDiff{GT, N, T}
     block::GT
     grad::T
     QDiff(block::DiffBlock{N, T}) where {N, T} = new{typeof(block), N, T}(block, T(0))
@@ -33,7 +33,8 @@ end
 content(cb::QDiff) = cb.block
 chcontent(cb::QDiff, blk::DiffBlock) = QDiff(blk)
 Base.adjoint(df::QDiff) = QDiff(content(df)')
-@forward QDiff.block mat, apply!
+@forward QDiff.block apply!
+mat(::Type{T}, df::QDiff) where T = mat(T, df.block)
 
 ## Print the differentiation marks.
 function YaoBlocks.print_annotation(io::IO, df::QDiff)
