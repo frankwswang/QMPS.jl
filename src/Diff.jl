@@ -10,7 +10,7 @@ import Yao: content, chcontent, mat, apply!
 
 
 # Basic type for differentiation.
-abstract type AbstractDiff{GT, N, T} <: TagBlock{GT, N, T} end
+abstract type AbstractDiff{GT, N, T} <: TagBlock{GT, N} end
 Base.adjoint(df::AbstractDiff) = Daggered(df)
 istraitkeeper(::AbstractDiff) = Val(true)
 const Rotor{N, T} = Union{RotationGate{N, T}, PutBlock{N, <:Any, <:RotationGate, <:Complex{T}}}
