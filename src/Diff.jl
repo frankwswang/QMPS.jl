@@ -58,11 +58,19 @@ markDiff(block::ControlBlock) = block
 
 
 """
-    getQdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock) -> diffblock.grad::Float64
+    getQdiff(psifunc, diffblock::AbstractDiff, op::AbstractBlock) -> diffblock.grad::Float64
 Operator differentiation.
 """
-@inline function getQdiff(psifunc, diffblock::AbstractDiff, op::MatrixBlock)
-    r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
+@inline function getQdiff(psifunc, diffblock::AbstractDiff, op::AbstractBlock)
+    # r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
+    r1, r2 = _perturb( diffblock, π/2 ) do      
+        ept = expect(op, psifunc())
+        # print("ept: $(ept)\n")
+        mn = mean( ept ) 
+        res = mn |> real
+        res
+    end
+    # print("r1 r2: ($(r1), $(r2))\n")
     diffblock.grad = (r2 - r1)/2
 end
 
