@@ -51,20 +51,20 @@ struct MPSDCpar
     depth::Int64 # Depth(number of layers) of each DC block in the MPS-DC circuit.
     
     function MPSDCpar(circuit::ChainBlock)
-        if typeof(circuit[1]) == ChainBlock{nqubits(circuit),Complex{Float64}}
+        if typeof(circuit[1]) <: AbstractContainer
+            # MPSC().cExtend[1]::AbstractContainer
+            rBit = content(circuit[1])[2][1].locs[1]
+            nBit = nqubits(content(circuit[1]))
+            vBit = nBit - rBit
+            depth = length(content(circuit[1])[1])
+            nBitA = nqubits(circuit) 
+        elseif typeof(circuit[1]) <: CompositeBlock
             # MPSC().circuit[1]::ChainBlock
             rBit = circuit[1][2][1].locs[1]
             nBit = nqubits(circuit)
             vBit = nBit - rBit
             depth = length(circuit[1][1])
             nBitA = vBit + rBit*length(circuit)
-        elseif typeof(circuit[1]) <: AbstractContainer
-            # MPSC().cExtend[1]::PutBlock
-            rBit = content(circuit[1])[2][1].locs[1]
-            nBit = nqubits(content(circuit[1]))
-            vBit = nBit - rBit
-            depth = length(content(circuit[1])[1])
-            nBitA = nqubits(circuit) 
         else
             println("ERROR: Input circuit is not supported by the function!")
             return 1
