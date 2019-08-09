@@ -9,7 +9,7 @@ A quick realization of MPS(Matrix Product State)-qubit circuit.
 Fields | Meanings
 ------------ | -------------
 __circuit__|MPS circuit.
-__cBlocks__|Array of all the MPS blocks in MPS circuit.
+__mpsBlocks__|Array of all the MPS blocks in MPS circuit.
 __cExtend__|The MPS circuit extended back to where it doesn't reuse any qubit.
 __cEBlocks__|Array of all the MPS blocks in the Extended circuit.
 __dGates__|Differentiable gates of the MPS circuit if applicable.

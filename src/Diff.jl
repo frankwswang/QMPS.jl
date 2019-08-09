@@ -58,49 +58,36 @@ markDiff(block::ControlBlock) = block
 
 
 """
-    getQdiff(psifunc, diffblock::AbstractDiff, op::AbstractBlock) -> diffblock.grad::Float64
-Operator differentiation.
+    getQdiff(psifunc::Function, diffblock::AbstractDiff, op::AbstractBlock) -> diffblock.grad::Float64
+Quantum Operator differentiation.
+\n `psifunc = ()-> reg::DefaultRegister |> c::ChainBlock`
+\n `diffblock = collect_blocks(AbstractDiff, c)`
+\n `op`: Witness Operator to measure reg.
 """
-@inline function getQdiff(psifunc, diffblock::AbstractDiff, op::AbstractBlock)
+@inline function getQdiff(psifunc::Function, diffblock::AbstractDiff, op::AbstractBlock)
     r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
-    # r1, r2 = _perturb( diffblock, π/2 ) do      
-    #     ept = expect(op, psifunc())
-    #     # print("ept: $(ept)\n")
-    #     mn = mean( ept ) 
-    #     res = mn |> real
-    #     res
-    # end
     diffblock.grad = (r2 - r1)/2
 end
 
-@inline function _perturb(func, gate::AbstractDiff{<:DiffBlock}, δ::Real)
+
+"""
+    getNdiff(psifunc::Function, parblock::AbstractBlock, op::AbstractBlock; δ::Real=0.01) -> diffblock.grad::Float64
+Numerical Operator differentiation.
+\n `psifunc = ()-> reg::DefaultRegister |> c::ChainBlock`
+\n `diffblock`: Paramterized block(gate) in c.
+\n `op`: Witness Operator to measure reg.
+"""
+@inline function getNdiff(psifunc::Function, parblock::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
+    r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, parblock, δ )
+    parblock.grad = (r2 - r1) / (2δ)
+end
+
+
+function _perturb(func, gate::AbstractDiff, δ::Real)
     dispatch!(-, gate, (δ,))
     r1 = func()
     dispatch!(+, gate, (2δ,))
     r2 = func()
     dispatch!(-, gate, (δ,))
     r1, r2
-end
-
-@inline function _perturb(func, gate::AbstractDiff{<:Rotor}, δ::Real)
-    dispatch!(-, gate, (δ,))
-    r1 = func()
-    dispatch!(+, gate, (2δ,))
-    r2 = func()
-    dispatch!(-, gate, (δ,))
-    r1, r2
-end
-
-
-"""
-    getNdiff(overlapFunc::Function, dGate::AbstractDiff; δ::Real=0.01) -> diffblock.grad::Float64
-Operator differentiation.
-"""
-function getNdiff(overlapFunc::Function, gate::AbstractDiff; δ::Real=0.01)
-    dispatch!(-,gate,δ)
-    o1 = overlapFunc()
-    dispatch!(+,gate,2δ)
-    o2 = overlapFunc()
-    dispatch!(-,gate,δ)
-    gate.grad =  (o2-o1)/(2δ)
 end

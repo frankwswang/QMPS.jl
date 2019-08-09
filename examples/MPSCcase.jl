@@ -1,3 +1,4 @@
+push!(LOAD_PATH, abspath("src"))
 using MPSCircuit
 
 # Creating Cluster-state MPS circuit.
