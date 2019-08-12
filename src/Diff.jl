@@ -83,7 +83,7 @@ Numerical Operator differentiation.
 end
 
 
-function _perturb(func, gate::AbstractDiff, δ::Real)
+@inline function _perturb(func, gate::AbstractDiff, δ::Real)
     dispatch!(-, gate, (δ,))
     r1 = func()
     dispatch!(+, gate, (2δ,))
