@@ -1,6 +1,6 @@
 # push!(LOAD_PATH, abspath("src"))
 using MPSCircuit
-using Test, Random, Statistics, Yao, Yao.ConstGate, YaoExtensions
+using Test, Random, Statistics, Yao
 
 @testset "CircuitBuilder.jl + MPSC.jl" begin
     #####CircuitBuilder.jl#####
