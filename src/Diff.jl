@@ -1,44 +1,36 @@
-#= 
-Realizing functions of selecting differentiable blocks and doing differentiations.
-Reference: https://github.com/QuantumBFS/QuAlgorithmZoo.jl.
-=#
-export Rotor, AbstractDiff, DiffBlock, QDiff, markDiff, getQdiff, getNdiff
+export QDiff, markDiff, getQdiff, getNdiff
 import Yao: content, chcontent, mat, apply!
 # Reminder of dependent packages.
 ## using StatsBase
-## using MacroTools:@forward
 
 
 # Basic type for differentiation.
-abstract type AbstractDiff{GT, N, T} <: TagBlock{GT, N} end
-Base.adjoint(df::AbstractDiff) = Daggered(df)
-istraitkeeper(::AbstractDiff) = Val(true)
-const Rotor{N, T} = Union{RotationGate{N, T}, PutBlock{N, <:Any, <:RotationGate{<:Any, T}}}
 const CphaseGate{N, T} = ControlBlock{N,<:ShiftGate{T},<:Any}
-const DiffBlock{N, T} = Union{Rotor{N, T}, CphaseGate{N, T}}
-
+const DiffBlock{N, T} = Union{RotationGate{N, T, <:Any}, CphaseGate{N, T}}
 
 # Quantum differentiation block.
 """
-    QDiff{GT, N, T} <: AbstractDiff{GT, N, T}
+    QDiff{GT, N, T} <: TagBlock{GT, N}
     QDiff(block) -> QDiff
 Mark a block as quantum differentiable.
 """
-mutable struct QDiff{GT, N, T} <: AbstractDiff{GT, N, T}
+mutable struct QDiff{GT, N} <: TagBlock{GT, N}
     block::GT
-    grad::T
-    QDiff(block::DiffBlock{N, T}) where {N, T} = new{typeof(block), N, T}(block, T(0))
+    grad::Float64
+    QDiff(block::DiffBlock{N}) where {N} = new{typeof(block), N}(block, 0)
 end
 
 content(cb::QDiff) = cb.block
-chcontent(cb::QDiff, blk::DiffBlock) = QDiff(blk)
-Base.adjoint(df::QDiff) = QDiff(content(df)')
-@forward QDiff.block apply!
+chcontent(cb::QDiff, blk::AbstractBlock) = QDiff(blk)
+YaoBlocks.PropertyTrait(::QDiff) = Yao.PreserveAll()
+
+apply!(reg::AbstractRegister, db::QDiff) = apply!(reg, content(db))
 mat(::Type{T}, df::QDiff) where T = mat(T, df.block)
+Base.adjoint(df::QDiff) = QDiff(content(df)')
 
 ## Print the differentiation marks.
 function YaoBlocks.print_annotation(io::IO, df::QDiff)
-    printstyled(io, "[̂∂] "; bold=true, color=:yellow)
+    printstyled(io, "[̂∂(MPSC)] "; bold=true, color=:yellow)
 end
 
 
@@ -52,19 +44,19 @@ function markDiff(blk::AbstractBlock)
     isempty(blks) ? blk : chsubblocks(blk, markDiff.(blks))
 end
 ## For differentiable blocks.
-markDiff(block::Union{RotationGate, CphaseGate}) = QDiff(block)
+markDiff(block::DiffBlock) = QDiff(block)
 ## Exclude control blocks.
 markDiff(block::ControlBlock) = block
 
 
 """
-    getQdiff(psifunc::Function, diffblock::AbstractDiff, op::AbstractBlock) -> diffblock.grad::Float64
+    getQdiff(psifunc::Function, diffblock::QDiff, op::AbstractBlock) -> diffblock.grad::Float64
 Quantum Operator differentiation.
-\n `psifunc = ()-> reg::DefaultRegister |> c::ChainBlock`
-\n `diffblock = collect_blocks(AbstractDiff, c)`
+\n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
+\n `diffblock = collect_blocks(QDiff, c)`
 \n `op`: Witness Operator to measure reg.
 """
-@inline function getQdiff(psifunc::Function, diffblock::AbstractDiff, op::AbstractBlock)
+@inline function getQdiff(psifunc::Function, diffblock::QDiff, op::AbstractBlock)
     r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, diffblock, π/2 )
     diffblock.grad = (r2 - r1)/2
 end
@@ -73,17 +65,17 @@ end
 """
     getNdiff(psifunc::Function, parblock::AbstractBlock, op::AbstractBlock; δ::Real=0.01) -> diffblock.grad::Float64
 Numerical Operator differentiation.
-\n `psifunc = ()-> reg::DefaultRegister |> c::ChainBlock`
+\n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
 \n `diffblock`: Paramterized block(gate) in c.
 \n `op`: Witness Operator to measure reg.
 """
-@inline function getNdiff(psifunc::Function, parblock::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
+@inline function getNdiff(psifunc::Function, parblock::QDiff, op::AbstractBlock; δ::Real=0.01)
     r1, r2 = _perturb( ()->mean( expect(op, psifunc()) ) |> real, parblock, δ )
     parblock.grad = (r2 - r1) / (2δ)
 end
 
 
-@inline function _perturb(func, gate::AbstractDiff, δ::Real)
+@inline function _perturb(func, gate::QDiff, δ::Real)
     dispatch!(-, gate, (δ,))
     r1 = func()
     dispatch!(+, gate, (2δ,))

@@ -1,8 +1,8 @@
 module MPSCircuit
 
-using Yao, Yao.ConstGate
+# using Yao, Yao.ConstGate
+using Yao
 using StatsBase
-using MacroTools:@forward
 
 include("Diff.jl")
 include("MPSC.jl")

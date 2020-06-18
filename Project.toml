@@ -1,19 +1,12 @@
 name = "MPSCircuit"
 uuid = "c4dd8f60-5e06-11e9-07f8-63d1cb63a4d1"
 authors = ["Frank Ws. Wang <frank.wang.w.s@gmail.com>"]
-version = "0.2.4"
+version = "0.2.6"
 
 [deps]
-MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 
 [Compat]
-Yao = "0.5.0"
-julia = "1.1"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
+julia = "1.3 - 1.4"
+Yao = "0.6.2"
