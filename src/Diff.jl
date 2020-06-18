@@ -1,4 +1,4 @@
-export QDiff, markDiff, getQdiff, getNdiff
+export QDiff, markDiff, markDiff!, getQdiff, getNdiff
 import StatsBase: mean
 # import Yao: content, chcontent, mat, apply!
 # Reminder of dependent packages.
