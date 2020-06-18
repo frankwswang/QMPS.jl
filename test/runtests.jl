@@ -1,5 +1,7 @@
 using MPSCircuit
-using Test, Random, Statistics, Yao
+using Test, Yao
+import Random: seed! 
+import Statistics: mean 
 
 @testset "CircuitBuilder.jl + MPSC.jl" begin
     #####CircuitBuilder.jl#####
@@ -28,6 +30,7 @@ using Test, Random, Statistics, Yao
     regCSr = repeat(rand_state(2), 5000)
     regCSe = rand_state(4)
     mpsCS = MPSbuilder(4, 1, 1, "CS")
+    @test MPSbuilder(4, 2, 1, "CS") == MPSbuilder(4, 1, 2, "CS") == :ERROR
     CScr = mpsCS.circuit
     CSce = mpsCS.cExtend
     CScrt = chain(2, chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
@@ -39,17 +42,17 @@ using Test, Random, Statistics, Yao
     opz(n) = chain(n, [put(n, i=>Z) for i=1:n])
     function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
         n = nqubits(reg)
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg1x = expect(opx(n), copy(reg) |> cr) |> mean |> real
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg1y = expect(opy(n), copy(reg) |> cr) |> mean |> real
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg1z = expect(opz(n), copy(reg) |> cr) |> mean |> real
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg2x = expect(opx(n), copy(reg) |> crt) |> mean |> real
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg2y = expect(opy(n), copy(reg) |> crt) |> mean |> real
-        Random.seed!(seedNum)
+        seed!(seedNum)
         reg2z = expect(opz(n), copy(reg) |> crt) |> mean |> real
         @test reg1x ≈ reg2x
         @test reg1y ≈ reg2y
@@ -128,9 +131,9 @@ using Test, Random, Statistics, Yao
     ## blockT = ("DC", 2)
     mpssDC = MPSC(("DC", 2), 6, 2, 2)
     reg2 = rand_state(6)
-    Random.seed!(seedNum)
+    seed!(seedNum)
     r1 = copy(reg2)|> mpssDC.cExtend
-    Random.seed!(seedNum)
+    seed!(seedNum)
     r2 = copy(reg2)|> DCcet 
     @test (r1 ≈ r2) == false
     dG2 = collect_blocks(QDiff, mpssDC.circuit)
@@ -149,14 +152,20 @@ end
     seedNum = 1234
     n = 3
     del = 10e-6 
-    Random.seed!(seedNum)
+    seed!(seedNum)
     reg = rand_state(n, nbatch = 1000)
-    c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), put(n, 1=>Ry(0)))
-    @show c
+    c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), control(n, 2, 1=>Ry(0)), control(n, 2, 1=>shift(pi/2)))
+    @test markDiff(c) != c
     c = markDiff(c)
-    @show c
+    c_0 = deepcopy(c)
+    markDiff!(c_0)
+    @test c_0 == c
+    DB_Rx = collect_blocks(QDiff, c)[1]
+    DB_St = collect_blocks(QDiff, c)[2]
+    @test copy(reg) |> DB_Rx == copy(reg) |> DB_Rx.block == apply!(copy(reg), DB_Rx)
+    @test copy(reg) |> DB_St == copy(reg) |> DB_St.block == apply!(copy(reg), DB_St)
     dG = collect_blocks(QDiff, c)
-    @test dG == [QDiff(Rx(pi)), QDiff(Ry(0.0))]
+    @test dG == [QDiff(Rx(pi)), QDiff(Ry(0.0)), control(n, 2, 1=>shift(pi/2)]
 
     # getQdiff(psifunc, diffblock::QDiff, op::AbstractBlock)
     # getNdiff(overlapFunc::Function, dGate::QDiff; δ::Real=0.01)

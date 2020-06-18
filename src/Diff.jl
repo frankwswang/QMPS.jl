@@ -45,7 +45,7 @@ Base.adjoint(df::QDiff) = QDiff(Yao.content(df)')
 # Convert blocks that are differentiable into type `QDiff{GT, N}`.
 """
     markDiff(block::AbstractBlock) -> block::AbstractBlock
-    Mark a block or sub-blocks inside a block tree(e.g.: ChainBlock) as the type of differentiable blocks `QDiff{GT, N}`.
+    Return the differentiable block(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
 """
 ## For Block trees.
 function markDiff(blk::AbstractBlock)
@@ -56,6 +56,16 @@ end
 markDiff(block::DiffBlock) = QDiff(block)
 ## Exclude control blocks.
 markDiff(block::ControlBlock) = block
+
+
+## Argument-modidying version of markDiff.
+"""
+markDiff!(block::AbstractBlock) -> block::AbstractBlock
+Mark a block or sub-blocks inside a block tree(e.g.: ChainBlock) as the type of differentiable blocks `QDiff{GT, N}` if possible.
+"""
+function markDiff!(blk::AbstractBlock)
+    blk =  markDiff(blk)   
+end
 
 
 """
