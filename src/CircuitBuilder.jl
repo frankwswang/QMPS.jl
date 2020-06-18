@@ -104,8 +104,7 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
 
     if blockT == "CS" # MPS blocks for 1D cluster state.
         if vBit !=1 || rBit !=1
-            println("ERROR: The nBit=vBit+rBit of cluster state MPS blocks should be 2!\n")
-            return :ERROR
+            error("The nBit=vBit+rBit of cluster state MPS blocks should be 2!\n")
         end
         cBlocks = ChainBlock[]
         MeasureBlock = Measure(nBit, locs=(nBit-vBit+1):nBit, resetto=0)
