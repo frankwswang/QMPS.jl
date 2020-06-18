@@ -2,7 +2,7 @@ module MPSCircuit
 
 # using Yao, Yao.ConstGate
 using Yao
-using StatsBase
+# using StatsBase
 
 include("Diff.jl")
 include("MPSC.jl")
