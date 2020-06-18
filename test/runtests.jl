@@ -166,7 +166,7 @@ end
     @test copy(reg) |> DB_Rx == copy(reg) |> DB_Rx.block == apply!(copy(reg), DB_Rx)
     @test copy(reg) |> DB_St == copy(reg) |> DB_St.block == apply!(copy(reg), DB_St)
     dG = collect_blocks(QDiff, c)
-    @test dG == [QDiff(Rx(pi)), QDiff(Ry(0.0)), control(n, 2, 1=>shift(pi/2)]
+    @test dG == [QDiff(Rx(pi)), QDiff(Ry(0.0)), control(n, 2, 1=>shift(pi/2))]
 
     # getQdiff(psifunc, diffblock::QDiff, op::AbstractBlock)
     # getNdiff(overlapFunc::Function, dGate::QDiff; δ::Real=0.01)
