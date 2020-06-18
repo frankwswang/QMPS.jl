@@ -30,8 +30,8 @@ import Statistics: mean
     regCSr = repeat(rand_state(2), 5000)
     regCSe = rand_state(4)
     mpsCS = MPSbuilder(4, 1, 1, "CS")
-    @test_throws MPSbuilder(4, 2, 1, "CS") 
-    @test_throws MPSbuilder(4, 1, 2, "CS")
+    @test_throws ErrorException MPSbuilder(4, 2, 1, "CS") 
+    @test_throws ErrorException MPSbuilder(4, 1, 2, "CS")
     CScr = mpsCS.circuit
     CSce = mpsCS.cExtend
     CScrt = chain(2, chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
