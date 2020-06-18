@@ -1,4 +1,4 @@
-push!(LOAD_PATH, abspath("src"))
+# push!(LOAD_PATH, abspath("src"))
 using MPSCircuit
 using Test, Random, Statistics, Yao, Yao.ConstGate, YaoExtensions
 

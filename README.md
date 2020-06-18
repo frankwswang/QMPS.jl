@@ -23,7 +23,7 @@ __nBlock__|Number of blocks in the MPS ciruict.
 
 ## Setup Guide
 ### Julia Environment
-* [__Julia 1.1__](https://julialang.org)
+* [__Julia 1.3-1.4__](https://julialang.org)
 
 ### Installation
 Please type `]` in Julia REPL to enter [`Pkg` mode](https://julialang.github.io/Pkg.jl/v1.0/index.html), then type:
