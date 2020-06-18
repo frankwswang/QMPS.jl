@@ -7,8 +7,8 @@ import StatsBase: mean
 
 #### Structures #####
 # Define supertypes of differentiable blocks.
-const CphaseGate{N, T} = YaoBlocks.ControlBlock{N,<:YaoBlocks.ShiftGate{T},<:Any}
-const DiffBlock{N, T} = Union{YaoBlocks.RotationGate{N, T, <:Any}, CphaseGate{N, T}}
+const CphaseGate{N, T} = ControlBlock{N, <:ShiftGate{T}, <:Any}
+const DiffBlock{N, T} = Union{RotationGate{N, T, <:Any}, CphaseGate{N, T}}
 
 
 # Define the struct of a differentiable block `QDiff{GT, N}`.
@@ -22,7 +22,7 @@ Differentiable blocks.
 mutable struct QDiff{GT, N} <: TagBlock{GT, N}
     block::GT
     grad::Float64
-    QDiff(blk::DiffBlock{N}) where {N} = new{typeof(block), N}(blk, 0)
+    QDiff(blk::DiffBlock{N}) where {N} = new{typeof(blk), N}(blk, 0)
 end
 
 
