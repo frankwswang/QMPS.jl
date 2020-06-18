@@ -64,7 +64,8 @@ markDiff!(block::AbstractBlock) -> block::AbstractBlock
 Mark a block or sub-blocks inside a block tree(e.g.: ChainBlock) as the type of differentiable blocks `QDiff{GT, N}` if possible.
 """
 function markDiff!(blk::AbstractBlock)
-    blk =  markDiff(blk)   
+    temp =  markDiff(blk)
+    blk = temp   
 end
 
 
