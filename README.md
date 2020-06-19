@@ -1,8 +1,8 @@
-# MPSCircuit
+# QMPS
 
-[![Build Status](https://travis-ci.com/frankwswang/MPSCircuit.jl.svg?branch=master)](https://travis-ci.com/frankwswang/MPSCircuit.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/MPSCircuit.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/MPSCircuit-jl)
-[![Coverage](https://codecov.io/gh/frankwswang/MPSCircuit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/MPSCircuit.jl)
+[![Build Status](https://travis-ci.com/frankwswang/MPSCircuit.jl.svg?branch=master)](https://travis-ci.com/frankwswang/QMPSC.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/MPSCircuit.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/QMPS-jl)
+[![Coverage](https://codecov.io/gh/frankwswang/MPSCircuit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/QMPS.jl)
 
 A quick realization of MPS(Matrix Product State)-qubit circuit. 
 

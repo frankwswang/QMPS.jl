@@ -1,4 +1,4 @@
-module MPSCircuit
+module QMPS
 
 # using Yao, Yao.ConstGate
 using Yao
