@@ -1,14 +1,71 @@
+push!(LOAD_PATH, abspath("./src"))
+
 using MPSCircuit
 using Test, Yao
 import Random: seed! 
 import Statistics: mean 
 
 @testset "CircuitBuilder.jl + MPSC.jl" begin
-    #####CircuitBuilder.jl#####
-    # DCbuilder(nBit::Int64, depth::Int64)
-    seedNum = 1234
-    dc = DCbuilder(4,2)
+    #####Test Functions#####
+    function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
+        n = nqubits(reg)
+        seed!(seedNum)
+        ExpReg1x = expect(opx(n), copy(reg) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpReg1y = expect(opy(n), copy(reg) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpReg1z = expect(opz(n), copy(reg) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpReg2x = expect(opx(n), copy(reg) |> crt) |> mean |> real
+        seed!(seedNum)
+        ExpReg2y = expect(opy(n), copy(reg) |> crt) |> mean |> real
+        seed!(seedNum)
+        ExpReg2z = expect(opz(n), copy(reg) |> crt) |> mean |> real
+        @test ExpReg1x ≈ ExpReg2x
+        @test ExpReg1y ≈ ExpReg2y
+        @test ExpReg1z ≈ ExpReg2z
+    end
 
+    function ce_test(reg::ArrayReg, ce::CompositeBlock, cet::CompositeBlock)
+        reg3 = copy(reg) |> ce
+        reg4 = copy(reg) |> cet
+        @test reg3 ≈ reg4
+    end
+
+    function re_test(regr::ArrayReg, rege::ArrayReg, cr::CompositeBlock, ce::CompositeBlock, vBit::Int64)
+        nr = nqubits(regr)
+        ne = nqubits(rege)
+        seed!(seedNum) 
+        ExpRegrx = expect(opVx(nr, vBit), copy(regr) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpRegry = expect(opVy(nr, vBit), copy(regr) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpRegrz = expect(opVz(nr, vBit), copy(regr) |> cr) |> mean |> real
+        seed!(seedNum)
+        ExpRegex = expect(opVx(ne, vBit), copy(rege) |> ce) |> mean |> real
+        seed!(seedNum)
+        ExpRegey = expect(opVy(ne, vBit), copy(rege) |> ce) |> mean |> real
+        seed!(seedNum)
+        ExpRegez = expect(opVz(ne, vBit), copy(rege) |> ce) |> mean |> real
+        @test isapprox(ExpRegrx, ExpRegex, atol = 0.5e-2)
+        @test isapprox(ExpRegry, ExpRegey, atol = 0.5e-2)
+        @test isapprox(ExpRegrz, ExpRegez, atol = 0.5e-2)
+    end
+
+    opx(n::Int64) = chain(n, [put(n, i=>X) for i=1:n])
+    opy(n::Int64) = chain(n, [put(n, i=>Y) for i=1:n])
+    opz(n::Int64) = chain(n, [put(n, i=>Z) for i=1:n])
+
+    opVx(n::Int64, V::Int64) = chain(n, [put(n, i=>X) for i=1:V])
+    opVy(n::Int64, V::Int64) = chain(n, [put(n, i=>Y) for i=1:V])
+    opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
+
+
+    #####CircuitBuilder.jl#####
+    seedNum = 1234
+    # DCbuilder(nBit::Int64, depth::Int64)
+    ## Preparing section
+    dc = DCbuilder(4,2)
     head  = chain(4, chain(4, put(4,4=>Rx(0)), put(4,3=>Rx(0)), put(4,2=>Rx(0)), put(4,1=>Rx(0))),
                      chain(4, put(4,4=>Rz(0)), put(4,3=>Rz(0)), put(4,2=>Rz(0)), put(4,1=>Rz(0))),
                      chain(4, control(4,4,3=>X), control(4,3,2=>X), control(4,2,1=>X), control(4,1,4=>X)))
@@ -20,6 +77,7 @@ import Statistics: mean
                      chain(4, put(4,4=>Rx(0)), put(4,3=>Rx(0)), put(4,2=>Rx(0)), put(4,1=>Rx(0))))
     Cblock = chain(4, block, block)
     body = chain(4, head, block, tail)
+    ## Testing section
     @test head == dc.head
     @test block == dc.block
     @test tail == dc.tail
@@ -27,50 +85,32 @@ import Statistics: mean
     @test body == dc.body 
 
     # MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
-    regCSr = repeat(rand_state(2), 5000)
+    ## Preparing section
+    regCSr = rand_state(2, nbatch=5000)
     regCSe = rand_state(4)
-    mpsCS = MPSbuilder(4, 1, 1, "CS")
-    @show mpsCS
+    regCSr0 = zero_state(2, nbatch=10000)
+    regCSe0 = zero_state(4, nbatch=10000)
+    mpsCS = MPSbuilder(4, 1, 1, "CS") 
     CScr = mpsCS.circuit
     CSce = mpsCS.cExtend
     CScrt = chain(2, chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
                      chain(2, put(2, (2,1)=>SWAP), put(2, 1=>H), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
                      chain(2, put(2, (2,1)=>SWAP), put(2, 1=>H), control(2, 1, 2=>Z)))
     CScet = chain(4, repeat(4, H, (4,3,2,1)), control(4, 3, 4=>Z), control(4, 2, 3=>Z), control(4, 1, 2=>Z))
-    opx(n) = chain(n, [put(n, i=>X) for i=1:n])
-    opy(n) = chain(n, [put(n, i=>Y) for i=1:n])
-    opz(n) = chain(n, [put(n, i=>Z) for i=1:n])
-    function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
-        n = nqubits(reg)
-        seed!(seedNum)
-        reg1x = expect(opx(n), copy(reg) |> cr) |> mean |> real
-        seed!(seedNum)
-        reg1y = expect(opy(n), copy(reg) |> cr) |> mean |> real
-        seed!(seedNum)
-        reg1z = expect(opz(n), copy(reg) |> cr) |> mean |> real
-        seed!(seedNum)
-        reg2x = expect(opx(n), copy(reg) |> crt) |> mean |> real
-        seed!(seedNum)
-        reg2y = expect(opy(n), copy(reg) |> crt) |> mean |> real
-        seed!(seedNum)
-        reg2z = expect(opz(n), copy(reg) |> crt) |> mean |> real
-        @test reg1x ≈ reg2x
-        @test reg1y ≈ reg2y
-        @test reg1z ≈ reg2z
-    end
-    function ce_test(reg::ArrayReg, ce::CompositeBlock, cet::CompositeBlock)
-        reg3 = copy(reg) |> ce
-        reg4 = copy(reg) |> cet
-        @test reg3 ≈ reg4
-    end
+    ## Testing section
+    print(IOBuffer(), mpsCS)
+    re_test(regCSr0, regCSe0, CScr, CSce, 1)
+    re_test(regCSr0, regCSe0, CScrt, CScet, 1)
     cr_test(regCSr, CScr, CScrt)
     ce_test(regCSe, CSce, CScet)
-
+    
     # MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String, Int64})
-    regDCr = repeat(rand_state(4), 5000)
+    ## Preparing section
+    regDCr = rand_state(4, nbatch=5000)
     regDCe = rand_state(6)
+    regDCr0 = zero_state(4, nbatch=10000)
+    regDCe0 = zero_state(6, nbatch=10000)
     mpsDC = MPSbuilder(6, 2, 2, ("DC", 2))
-    @show mpsDC
     DCcr = mpsDC.circuit
     DCce = mpsDC.cExtend
     Cb1 = deepcopy(Cblock) |> markDiff
@@ -85,16 +125,23 @@ import Statistics: mean
     swap2 = chain(4, put(4, (3,2)=>SWAP), put(4, (2,1)=>SWAP), put(4, (4,3)=>SWAP), put(4, (3,2)=>SWAP))
     DCcrt = chain(4, Cb1, swap1, Measure(4, locs=(3,4), resetto=0), swap2, Cb2, swap1)
     DCcet = chain(6, subroutine(6, chain(4, Cb1, swap1), 3:6), subroutine(6, chain(4, Cb2, swap1), 1:4))
+    ## Testing section
+    print(IOBuffer(), mpsDC)
+    re_test(regDCr0, regDCe0, DCcr, DCce, 2)
+    re_test(regDCr0, regDCe0, DCcrt, DCcet, 2)
     cr_test(regDCr, DCcr, DCcrt)
     ce_test(regDCe, DCce, DCcet)
 
+
     #####MPSC.jl#####
     # MPSpar(nBitA::Int64, vBit::Int64, rBit::Int64)
+    ## Preparing section
     nA = 13
     v = 4
     r = 3
     d = 2
     par = MPSpar(nA, v, r)
+    ## Testing section
     @test par.nBitA == nA
     @test par.vBit == v
     @test par.rBit == r
@@ -102,15 +149,17 @@ import Statistics: mean
     @test par.nBlock == Int((nA - v) / r)
 
     # MPSDCpar(circuit::ChainBlock)
+    ## Preparing section
     mpsDC2 = MPSbuilder(nA, v, r, ("DC", d))
     par2 = MPSDCpar(mpsDC2.circuit)
+    par3 = MPSDCpar(mpsDC2.cExtend)
+    ## Testing section
     @test par2.nBitA == nA
     @test par2.vBit == v
     @test par2.rBit == r
     @test par2.nBit == v+r
     @test par2.nBlock == length(mpsDC2.circuit)
     @test par2.depth == d
-    par3 = MPSDCpar(mpsDC2.cExtend)
     @test par3.nBitA == nA
     @test par3.vBit == v
     @test par3.rBit == r
@@ -120,7 +169,10 @@ import Statistics: mean
 
     # MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar=0)
     ## blockT = "CS"
+    ### Preparing section
     mpssCS = MPSC("CS", 4, 1, 1)
+    ### Testing section
+    re_test(regCSr0, regCSe0, mpssCS.circuit, mpssCS.cExtend, 1)
     cr_test(regCSr, mpssCS.circuit, CScrt)
     ce_test(regCSe, mpssCS.cExtend, CScet)
     @test mpssCS.mpsBlocks == [chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z)), 
@@ -130,17 +182,25 @@ import Statistics: mean
     @test mpssCS.nBit == nqubits(CScrt)
     @test mpssCS.nBlock == length(mpssCS.circuit)
     ## blockT = ("DC", 2)
+    ### Preparing section
     mpssDC = MPSC(("DC", 2), 6, 2, 2)
-    reg2 = rand_state(6)
+    reg2DCe = rand_state(6)
     seed!(seedNum)
-    r1 = copy(reg2)|> mpssDC.cExtend
+    reg2DCe_1 = copy(reg2DCe)|> mpssDC.cExtend
     seed!(seedNum)
-    r2 = copy(reg2)|> DCcet 
-    @test (r1 ≈ r2) == false
+    reg2DCe_2 = copy(reg2DCe)|> DCcet 
+    seed!(seedNum)
+    regDCr0_1 = copy(regDCr0)|> mpssDC.circuit
+    seed!(seedNum)
+    regDCr0_2 = copy(regDCr0)|> DCcrt
     dG2 = collect_blocks(QDiff, mpssDC.circuit)
-    dispatch!.(dG2, [pars1;pars2]) 
-    cr_test(regDCr, mpssDC.circuit, DCcrt)
-    ce_test(regDCe, mpssDC.cExtend, DCcet)
+    dispatch!.(dG2, [pars1;pars2])
+    ### Testing section
+    @test (reg2DCe_1 ≈ reg2DCe_2) == false
+    @test (regDCr0_1 ≈ regDCr0_2) == false
+    cr_test(regDCr0, mpssDC.circuit, DCcrt)
+    ce_test(reg2DCe, mpssDC.cExtend, DCcet)
+    re_test(regDCr0, regDCe0, mpssDC.circuit, mpssDC.cExtend, 2)
     @test mpssDC.mpsBlocks == [chain(4, Cb1, swap1), chain(4, swap2, Cb2, swap1)]
     @test mpssDC.cEBlocks == DCce.blocks
     @test mpssDC.dGates == collect_blocks(QDiff, DCce)
@@ -148,7 +208,8 @@ import Statistics: mean
     @test mpssDC.nBlock == length(mpssDC.circuit)
     @test parameters(MPSC(("DC", 1), 3, 1, 1, dBlocksPar=[1.0:12.0;]).circuit) == [1.0:12.0;]  
 
-    ## Error Exception Tests
+
+    #####Error Exception Tests#####
     @test_throws ErrorException MPSbuilder(6, 3, 2, ("DC", 2))
     @test_throws ErrorException MPSpar(5, 1, 3)
     @test_throws ErrorException mpssDC2 = MPSC(("DC", 1), 5, 2, 2)
