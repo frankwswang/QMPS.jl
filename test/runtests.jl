@@ -223,12 +223,11 @@ import Statistics: mean
 end
 
 @testset "Diff.jl" begin
-    # markDiff(block::AbstractBlock) QMPS.QDiff(block)
+    # Preparing section
     seedNum = 1234
     n = 3
-    del = 10e-6 
-    seed!(seedNum)
-    reg = rand_state(n, nbatch = 1000)
+    
+    # Testing basic Yao-compatible functions for QDiff{GT, N} and markDiff(block::AbstractBlock).
     c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), control(n, 2, 1=>Ry(0)), control(n, 2, 1=>shift(pi/2)))
     c = markDiff(c)
     DB_Rx = collect_blocks(QMPS.QDiff, c)[1]
@@ -245,6 +244,11 @@ end
     @test dG == [ QMPS.QDiff(Rx(pi)), QMPS.QDiff(control(n, 2, 1=>shift(pi/2))) ]
     @test dG[1].mat == mat(dG[1])
     @test (dG[1])' == adjoint(dG[1]) == QMPS.QDiff( adjoint(dG[1].block) )
+    
+    # Testing functions getQdiff() and getNdiff().
+    del = 10e-6 
+    seed!(seedNum)
+    reg = rand_state(n, nbatch = 1000)
     c2 = DCbuilder(n,3).body
     c2 = markDiff(c2)
     dispatch!(c2, :random)

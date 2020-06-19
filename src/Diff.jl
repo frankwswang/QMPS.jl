@@ -35,7 +35,7 @@ function YaoBlocks.print_annotation(io::IO, df::QDiff)
 end
 
 
-# Define basic Yao functions for QDiff{GT, N}.
+# Define basic Yao-compatible functions for QDiff{GT, N}.
 Yao.content(cb::QDiff) = cb.block
 Yao.apply!(reg::AbstractRegister, db::QDiff) = apply!(reg, Yao.content(db))
 Yao.mat(::Type{T}, df::QDiff) where T = Yao.mat(T, df.block)
