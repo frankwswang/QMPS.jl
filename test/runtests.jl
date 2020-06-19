@@ -1,5 +1,3 @@
-push!(LOAD_PATH, abspath("./src"))
-
 using QMPS
 using Test, Yao
 import Random: seed! 

@@ -6,7 +6,7 @@ export DCbuilder, MPSbuilder, MPSc
 
 """
     DCbuilder(nBit::Int64, depth::Int64)
-Structure of elements may needed for a Differentiable circuit.
+Structure of elements may needed for a Quantum Differentiable circuit.
 \nFields:
 \n`block::ChainBlock`:  The block for 1 depth.
 \n`Cblock::ChainBlock`: The Blocks chained without the structure of head and tail(same depth).
@@ -42,7 +42,7 @@ end
 """
     MPSc{circuit::ChainBlock, cExtend::ChainBlock}
 Fields:
-\n`circuit::ChainBlock`: MPS-qubit-reusable circuit.
+\n`circuit::ChainBlock`: MPS-qubit-reusable (QMPS) circuit.
 \n`cExtend::ChainBlock`: MPS-extended circuit.
 """
 struct MPSc
@@ -106,20 +106,3 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Union{String
 
     MPSc(circuit, cExtend)
 end
-# """
-#     MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String) 
-#     -> 
-#     MPCs{circuit::ChainBlock, cExtend::ChainBlock}
-# Method 2 of `MPSbuilder`: 
-# \nSupported types of `blockT`:
-# \n1) `blockT = "CS"` "CS" stands for "cluster state".
-# """
-# function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
-#     par2nd = MPSpar(nBitA, vBit, rBit)
-#     nBlock = par2nd.nBlock
-#     nBit = par2nd.nBit
-
-    
-    
-#     MPSc(circuit, cExtend)
-# end

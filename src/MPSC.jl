@@ -87,18 +87,18 @@ end
 
 """
     MPSC(blockT::Union{String, Tuple{String, Int64}}, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar::Array{Float64,1}=[0.0])
-Structure of related elements of MPS circuit.
+Structure of elements related to a QMPS circuit.
 \n`blockT` = ("DC", depth) stands for "Differentiable circuit".
 \n`blockT` = "CS" stands for "cluster state".
 \n`dBlocksPar` is the array of the parameters for Differentiable blocks in the circuit.
 \nFields:
-\n`circuit::ChainBlock`:                MPS circuit.
+\n`circuit::ChainBlock`:                QMPS circuit.
 \n`mpsBlocks::Array{CompositeBlock,1}`: Array of all the MPS blocks in the MPS circuit.
-\n`cExtend::ChainBlock`:                The MPS circuit extended back to where it doesn't reuse any qubit.
+\n`cExtend::ChainBlock`:                The QMPS circuit extended back to where it doesn't reuse any qubit.
 \n`cEBlocks::Array{CompositeBlock,1}`:  Array of all the MPS blocks in the Extended circuit.
-\n`dGates::Array{QMPS.QDiff,1}`:      Differentiable gates of the MPS circuit if applicable.
-\n`nBit::Int64`:                        Number of lines(bits) of the MPS circuit.
-\n`nBlock::Int64`:                      Number of blocks in the MPS circuit.
+\n`dGates::Array{QMPS.QDiff,1}`:        Differentiable gates of the QMPS circuit if applicable.
+\n`nBit::Int64`:                        Number of lines(bits) of the QMPS circuit.
+\n`nBlock::Int64`:                      Number of blocks in the QMPS circuit.
 """
 struct MPSC
     circuit::ChainBlock                # MPS circuit.
