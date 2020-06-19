@@ -23,8 +23,7 @@ struct MPSpar
 
     function MPSpar(nBitA::Int64, vBit::Int64, rBit::Int64)
         if (nBitA - vBit -rBit) % rBit != 0 
-            println("Error: nBlock is not integer!")
-            return 0
+            error("Error: nBlock is not integer!")
         end
         nBlock = Int((nBitA - vBit) / rBit)
         nBit = rBit + vBit
@@ -116,8 +115,7 @@ struct MPSC
                 pars .= dBlocksPar
                 dispatch!.(dGates, pars) 
             else
-                println("The number of elements in dBlocksPar is not correct!!")
-                return 1
+                error("The number of elements in dBlocksPar is not correct!!")
             end
         end
         mpsBlocks = CompositeBlock[]

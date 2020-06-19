@@ -1,4 +1,5 @@
-export QDiff, markDiff, markDiff!, getQdiff, getNdiff
+export QDiff, markDiff, getQdiff, getNdiff
+export markDiff!
 import StatsBase: mean
 # import Yao: content, chcontent, mat, apply!
 # Reminder of dependent packages.
@@ -14,7 +15,7 @@ const DiffBlock{N, T} = Union{RotationGate{N, T, <:Any}, CphaseGate{N, T}}
 # Define the struct of a differentiable block `QDiff{GT, N}`.
 """
     QDiff{GT, N} <: TagBlock{GT, N}
-Differentiable blocks.
+Differentiable gate. If you want to mark or return a differentiable block, use `markDiff` or `markDiff!` instead.
 \nFields:
 \n`block::GT`: Sub-block(s) of the differentiable block.  
 \n`grad::Float64`: Gradient(s) of the differentiable block.
@@ -22,10 +23,9 @@ Differentiable blocks.
 mutable struct QDiff{GT, N} <: TagBlock{GT, N}
     block::GT
     grad::Float64
-    QDiff(blk::DiffBlock{N}) where {N} = new{typeof(blk), N}(blk, 0)
+    mat
+    QDiff(blk::DiffBlock{N}) where {N} = new{typeof(blk), N}(blk, 0, mat(blk))
 end
-
-
 
 
 #### Functions ##### 
@@ -56,17 +56,6 @@ end
 markDiff(block::DiffBlock) = QDiff(block)
 ## Exclude control blocks.
 markDiff(block::ControlBlock) = block
-
-
-## Argument-modidying version of markDiff.
-"""
-markDiff!(block::AbstractBlock) -> block::AbstractBlock
-Mark a block or sub-blocks inside a block tree(e.g.: ChainBlock) as the type of differentiable blocks `QDiff{GT, N}` if possible.
-"""
-function markDiff!(blk::AbstractBlock)
-    temp =  markDiff(blk)
-    blk = temp   
-end
 
 
 """

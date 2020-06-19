@@ -33,7 +33,7 @@ import Statistics: mean
     regCSe = rand_state(4)
     mpsCS = MPSbuilder(4, 1, 1, "CS")
     @test_throws ErrorException MPSbuilder(4, 2, 1, "CS") 
-    @test_throws ErrorException MPSbuilder(4, 1, 2, "CS")
+    @test_throws ErrorException MPSbuilder(5, 1, 2, "CS")
     CScr = mpsCS.circuit
     CSce = mpsCS.cExtend
     CScrt = chain(2, chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
@@ -73,6 +73,7 @@ import Statistics: mean
     regDCr = repeat(rand_state(4), 5000)
     regDCe = rand_state(6)
     mpsDC = MPSbuilder(6, 2, 2, ("DC", 2))
+    @test_throws ErrorException MPSbuilder(6, 3, 2, ("DC", 2))
     DCcr = mpsDC.circuit
     DCce = mpsDC.cExtend
     Cb1 = deepcopy(Cblock) |> markDiff
@@ -130,7 +131,7 @@ import Statistics: mean
                                chain(2, put(2, (2,1)=>SWAP), put(2, 1=>H), control(2, 1, 2=>Z))]
     @test mpssCS.cEBlocks == CScet.blocks
     @test mpssCS.nBit == nqubits(CScrt)
-    @test mpssCS.nBlock == length(mpssCS.circuit)                          
+    @test mpssCS.nBlock == length(mpssCS.circuit)
     ## blockT = ("DC", 2)
     mpssDC = MPSC(("DC", 2), 6, 2, 2)
     reg2 = rand_state(6)
@@ -148,6 +149,9 @@ import Statistics: mean
     @test mpssDC.dGates == collect_blocks(QDiff, DCce)
     @test mpssDC.nBit == nqubits(DCcr)
     @test mpssDC.nBlock == length(mpssDC.circuit)  
+
+    # ###Test `dBlocksPar` in `mpsC`
+    # mpssCS2 = MPSC(("DC", 1), 3, 1, 1, [])
 end
 
 @testset "Diff.jl" begin
@@ -158,20 +162,21 @@ end
     seed!(seedNum)
     reg = rand_state(n, nbatch = 1000)
     c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), control(n, 2, 1=>Ry(0)), control(n, 2, 1=>shift(pi/2)))
-    @test markDiff(c) != c
     c = markDiff(c)
-    c_0 = deepcopy(c)
-    markDiff!(c_0)
-    @test c_0 == c
     DB_Rx = collect_blocks(QDiff, c)[1]
-    DB_St = collect_blocks(QDiff, c)[2]
-    @test copy(reg) |> DB_Rx == copy(reg) |> DB_Rx.block == apply!(copy(reg), DB_Rx)
-    @test copy(reg) |> DB_St == copy(reg) |> DB_St.block == apply!(copy(reg), DB_St)
+    DB_CS = collect_blocks(QDiff, c)[end]
+    applyTestReg1 = rand_state(1)
+    applyTestReg2 = rand_state(n)
+    @test (copy(applyTestReg1) |> DB_Rx) == (apply!(copy(applyTestReg1), DB_Rx))
+    @test (copy(applyTestReg1) |> DB_Rx.block) == (apply!(copy(applyTestReg1), DB_Rx.block))
+    @test (copy(applyTestReg1) |> DB_Rx) == (copy(applyTestReg1) |> DB_Rx.block)
+    @test (copy(applyTestReg2) |> DB_CS) == (apply!(copy(applyTestReg2), DB_CS))
+    @test (copy(applyTestReg2) |> DB_CS.block) == (apply!(copy(applyTestReg2), DB_CS.block))
+    @test (copy(applyTestReg2) |> DB_CS) == (copy(applyTestReg2) |> DB_CS.block)
     dG = collect_blocks(QDiff, c)
-    @test dG == [QDiff(Rx(pi)), QDiff(Ry(0.0)), control(n, 2, 1=>shift(pi/2))]
-
-    # getQdiff(psifunc, diffblock::QDiff, op::AbstractBlock)
-    # getNdiff(overlapFunc::Function, dGate::QDiff; δ::Real=0.01)
+    @test dG == [ QDiff(Rx(pi)), QDiff(control(n, 2, 1=>shift(pi/2))) ]
+    @test dG[1].mat == mat(dG[1])
+    @test (dG[1])' == adjoint(dG[1]) == QDiff( adjoint(dG[1].block) )
     c2 = DCbuilder(n,3).body
     c2 = markDiff(c2)
     dispatch!(c2, :random)
