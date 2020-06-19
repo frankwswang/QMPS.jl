@@ -1,10 +1,10 @@
 # QMPS
 
-[![Build Status](https://travis-ci.com/frankwswang/MPSCircuit.jl.svg?branch=master)](https://travis-ci.com/frankwswang/QMPSC.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/MPSCircuit.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/QMPS-jl)
-[![Coverage](https://codecov.io/gh/frankwswang/MPSCircuit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/QMPS.jl)
+[![Build Status](https://travis-ci.com/frankwswang/QMPS.jl.svg?branch=master)](https://travis-ci.com/frankwswang/QMPS.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/QMPS.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/QMPS-jl)
+[![Coverage](https://codecov.io/gh/frankwswang/QMPS.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/QMPS.jl)
 
-A quick realization of MPS(Matrix Product State)-qubit circuit. 
+A quick realization of Quantum circuit (QMPS) of Matrix Product States.
 
 ## Supported types of MPS
 - Cluster state
