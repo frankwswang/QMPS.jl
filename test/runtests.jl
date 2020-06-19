@@ -1,6 +1,6 @@
 push!(LOAD_PATH, abspath("./src"))
 
-using MPSCircuit
+using QMPS
 using Test, Yao
 import Random: seed! 
 import Statistics: mean 
@@ -117,8 +117,8 @@ import Statistics: mean
     Cb2 = deepcopy(Cblock) |> markDiff
     dispatch!(Cb1, :random)
     dispatch!(Cb2, :random)
-    pars1 = getiparams.(content.(collect_blocks(QDiff, Cb1)))
-    pars2 = getiparams.(content.(collect_blocks(QDiff, Cb2)))
+    pars1 = getiparams.(content.(collect_blocks(QMPS.QDiff, Cb1)))
+    pars2 = getiparams.(content.(collect_blocks(QMPS.QDiff, Cb2)))
     dispatch!(DCcr[1], pars1)
     dispatch!(DCcr[2], pars2)
     swap1 = chain(4, put(4, (2,3)=>SWAP), put(4, (3,4)=>SWAP), put(4, (1,2)=>SWAP), put(4, (2,3)=>SWAP))
@@ -193,7 +193,7 @@ import Statistics: mean
     regDCr0_1 = copy(regDCr0)|> mpssDC.circuit
     seed!(seedNum)
     regDCr0_2 = copy(regDCr0)|> DCcrt
-    dG2 = collect_blocks(QDiff, mpssDC.circuit)
+    dG2 = collect_blocks(QMPS.QDiff, mpssDC.circuit)
     dispatch!.(dG2, [pars1;pars2])
     ### Testing section
     @test (reg2DCe_1 ≈ reg2DCe_2) == false
@@ -203,7 +203,7 @@ import Statistics: mean
     re_test(regDCr0, regDCe0, mpssDC.circuit, mpssDC.cExtend, 2)
     @test mpssDC.mpsBlocks == [chain(4, Cb1, swap1), chain(4, swap2, Cb2, swap1)]
     @test mpssDC.cEBlocks == DCce.blocks
-    @test mpssDC.dGates == collect_blocks(QDiff, DCce)
+    @test mpssDC.dGates == collect_blocks(QMPS.QDiff, DCce)
     @test mpssDC.nBit == nqubits(DCcr)
     @test mpssDC.nBlock == length(mpssDC.circuit)
     @test parameters(MPSC(("DC", 1), 3, 1, 1, dBlocksPar=[1.0:12.0;]).circuit) == [1.0:12.0;]  
@@ -223,7 +223,7 @@ import Statistics: mean
 end
 
 @testset "Diff.jl" begin
-    # markDiff(block::AbstractBlock) QDiff(block)
+    # markDiff(block::AbstractBlock) QMPS.QDiff(block)
     seedNum = 1234
     n = 3
     del = 10e-6 
@@ -231,8 +231,8 @@ end
     reg = rand_state(n, nbatch = 1000)
     c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), control(n, 2, 1=>Ry(0)), control(n, 2, 1=>shift(pi/2)))
     c = markDiff(c)
-    DB_Rx = collect_blocks(QDiff, c)[1]
-    DB_CS = collect_blocks(QDiff, c)[end]
+    DB_Rx = collect_blocks(QMPS.QDiff, c)[1]
+    DB_CS = collect_blocks(QMPS.QDiff, c)[end]
     applyTestReg1 = rand_state(1)
     applyTestReg2 = rand_state(n)
     @test (copy(applyTestReg1) |> DB_Rx) == (apply!(copy(applyTestReg1), DB_Rx))
@@ -241,15 +241,15 @@ end
     @test (copy(applyTestReg2) |> DB_CS) == (apply!(copy(applyTestReg2), DB_CS))
     @test (copy(applyTestReg2) |> DB_CS.block) == (apply!(copy(applyTestReg2), DB_CS.block))
     @test (copy(applyTestReg2) |> DB_CS) == (copy(applyTestReg2) |> DB_CS.block)
-    dG = collect_blocks(QDiff, c)
-    @test dG == [ QDiff(Rx(pi)), QDiff(control(n, 2, 1=>shift(pi/2))) ]
+    dG = collect_blocks(QMPS.QDiff, c)
+    @test dG == [ QMPS.QDiff(Rx(pi)), QMPS.QDiff(control(n, 2, 1=>shift(pi/2))) ]
     @test dG[1].mat == mat(dG[1])
-    @test (dG[1])' == adjoint(dG[1]) == QDiff( adjoint(dG[1].block) )
+    @test (dG[1])' == adjoint(dG[1]) == QMPS.QDiff( adjoint(dG[1].block) )
     c2 = DCbuilder(n,3).body
     c2 = markDiff(c2)
     dispatch!(c2, :random)
     op = put(n, 2=>Z)
-    dGates = collect_blocks(QDiff, c2)
+    dGates = collect_blocks(QMPS.QDiff, c2)
     qg = getQdiff.(()->(copy(reg) |> c2), dGates, Ref(op))
     ng = getNdiff.(()->(copy(reg) |> c2), dGates, Ref(op), δ=del)
     tg = zeros(length(dGates))
