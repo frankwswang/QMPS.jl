@@ -1,4 +1,4 @@
-export QDiff, markDiff, getQdiff, getNdiff
+export markDiff, getQdiff, getNdiff
 export markDiff!
 import StatsBase: mean
 # import Yao: content, chcontent, mat, apply!

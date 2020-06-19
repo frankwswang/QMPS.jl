@@ -96,7 +96,7 @@ Structure of related elements of MPS circuit.
 \n`mpsBlocks::Array{CompositeBlock,1}`: Array of all the MPS blocks in the MPS circuit.
 \n`cExtend::ChainBlock`:                The MPS circuit extended back to where it doesn't reuse any qubit.
 \n`cEBlocks::Array{CompositeBlock,1}`:  Array of all the MPS blocks in the Extended circuit.
-\n`dGates::Array{QDiff,1}`:      Differentiable gates of the MPS circuit if applicable.
+\n`dGates::Array{QMPS.QDiff,1}`:      Differentiable gates of the MPS circuit if applicable.
 \n`nBit::Int64`:                        Number of lines(bits) of the MPS circuit.
 \n`nBlock::Int64`:                      Number of blocks in the MPS circuit.
 """
@@ -105,7 +105,7 @@ struct MPSC
     mpsBlocks::Array{CompositeBlock,1} # Array of all the MPS blocks in the MPS circuit.
     cExtend::ChainBlock                # The MPS circuit extended back to where it doesn't reuse any qubit.
     cEBlocks::Array{CompositeBlock,1}  # Array of all the MPS blocks in the Extended circuit.
-    dGates::Array{QDiff,1}      # Differentiable gates of the MPS circuit if applicable.
+    dGates::Array{QMPS.QDiff,1}      # Differentiable gates of the MPS circuit if applicable.
     nBit::Int64                        # Number of lines(bits) of the MPS circuit.
     nBlock::Int64                      # Number of blocks in the MPS circuit.
 
@@ -117,7 +117,7 @@ struct MPSC
         circuit = MPS.circuit
         cExtend = MPS.cExtend
         dispatch!(circuit, :random)
-        dGates = collect_blocks(QDiff, circuit)
+        dGates = collect_blocks(QMPS.QDiff, circuit)
         if dBlocksPar != [0.0]
             if length(dGates) == length(dBlocksPar)
                 pars = [parameters(dGates[i])[1] for i=1:length(dGates)]
