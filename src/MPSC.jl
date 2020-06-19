@@ -23,7 +23,7 @@ struct MPSpar
 
     function MPSpar(nBitA::Int64, vBit::Int64, rBit::Int64)
         if (nBitA - vBit -rBit) % rBit != 0 
-            error("Error: nBlock is not integer!")
+            error("Error: nBlock is not integer.")
         end
         nBlock = Int((nBitA - vBit) / rBit)
         nBit = rBit + vBit
@@ -67,8 +67,7 @@ struct MPSDCpar
             depth = length(circuit[1][1][1])
             nBitA = vBit + rBit*length(circuit)
         else
-            println("ERROR: Input circuit is not supported by the function!")
-            return 1
+            error("ERROR: Input circuit is not supported by the function!")
         end
         nBlock = Int((nBitA - vBit) / rBit)
     new(nBitA, vBit, rBit, nBit, nBlock, depth)
@@ -77,7 +76,7 @@ end
 
 
 """
-    MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar=0)
+    MPSC(blockT::Union{String, Tuple{String, Int64}}, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar::Array{Float64,1}=[0.0])
 Structure of related elements of MPS circuit.
 \n`blockT` = ("DC", depth) stands for "Differentiable circuit".
 \n`blockT` = "CS" stands for "cluster state".
@@ -100,7 +99,7 @@ struct MPSC
     nBit::Int64                        # Number of lines(bits) of the MPS circuit. 
     nBlock::Int64                      # Number of blocks in the MPS circuit.
 
-    function MPSC(blockT, nBitA::Int64, vBit::Int64, rBit::Int64=1; dBlocksPar::Array{Float64,1}=[0.0])
+    function MPSC(blockT::Union{String, Tuple{String, Int64}}, nBitA::Int64, vBit::Int64, rBit::Int64; dBlocksPar::Array{Float64,1}=[0.0])
         par2nd = MPSpar(nBitA, vBit, rBit)
         nBlock = par2nd.nBlock
         nBit = par2nd.nBit
@@ -114,8 +113,10 @@ struct MPSC
                 pars = [parameters(dGates[i])[1] for i=1:length(dGates)] 
                 pars .= dBlocksPar
                 dispatch!.(dGates, pars) 
+            elseif blockT == "CS"
+                error("Cluster states don't support optional argument `dBlocksPar`.")
             else
-                error("The number of elements in dBlocksPar is not correct!!")
+                error("The number of elements in `dBlocksPar` is not correct.")
             end
         end
         mpsBlocks = CompositeBlock[]

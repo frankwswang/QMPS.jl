@@ -32,8 +32,7 @@ import Statistics: mean
     regCSr = repeat(rand_state(2), 5000)
     regCSe = rand_state(4)
     mpsCS = MPSbuilder(4, 1, 1, "CS")
-    @test_throws ErrorException MPSbuilder(4, 2, 1, "CS") 
-    @test_throws ErrorException MPSbuilder(5, 1, 2, "CS")
+    @show mpsCS
     CScr = mpsCS.circuit
     CSce = mpsCS.cExtend
     CScrt = chain(2, chain(2, repeat(2, H, (2,1)), control(2, 1, 2=>Z), Measure(2, locs=2, resetto=0)), 
@@ -73,7 +72,7 @@ import Statistics: mean
     regDCr = repeat(rand_state(4), 5000)
     regDCe = rand_state(6)
     mpsDC = MPSbuilder(6, 2, 2, ("DC", 2))
-    @test_throws ErrorException MPSbuilder(6, 3, 2, ("DC", 2))
+    @show mpsDC
     DCcr = mpsDC.circuit
     DCce = mpsDC.cExtend
     Cb1 = deepcopy(Cblock) |> markDiff
@@ -148,10 +147,20 @@ import Statistics: mean
     @test mpssDC.cEBlocks == DCce.blocks
     @test mpssDC.dGates == collect_blocks(QDiff, DCce)
     @test mpssDC.nBit == nqubits(DCcr)
-    @test mpssDC.nBlock == length(mpssDC.circuit)  
+    @test mpssDC.nBlock == length(mpssDC.circuit)
+    @test parameters(MPSC(("DC", 1), 3, 1, 1, dBlocksPar=[1.0:12.0;]).circuit) == [1.0:12.0;]  
 
-    # ###Test `dBlocksPar` in `mpsC`
-    # mpssCS2 = MPSC(("DC", 1), 3, 1, 1, [])
+    ## Error Exception Tests
+    @test_throws ErrorException MPSbuilder(6, 3, 2, ("DC", 2))
+    @test_throws ErrorException MPSpar(5, 1, 3)
+    @test_throws ErrorException mpssDC2 = MPSC(("DC", 1), 5, 2, 2)
+
+    @test_throws ErrorException MPSbuilder(4, 2, 1, "CS") 
+    @test_throws ErrorException MPSbuilder(5, 1, 2, "CS")
+
+    @test_throws ErrorException MPSDCpar(chain(chain(4, Cb1, put(4, 1=>X))))
+    @test_throws ErrorException mpssDC2 = MPSC("CS", 3, 1, 1, dBlocksPar=[1:0.5:13;])
+    @test_throws ErrorException mpssDC2 = MPSC(("DC", 1), 3, 1, 1, dBlocksPar=[1:0.5:13;])
 end
 
 @testset "Diff.jl" begin
