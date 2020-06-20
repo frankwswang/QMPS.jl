@@ -84,7 +84,7 @@ Numerical Operator differentiation. When only apply `getNdiff!` to one different
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, parGate, δ )
     grad = (r2 - r1) / (2δ)
 end
-@inline function getNdiff(psifunc::Function, parGates::Array{AbstractBlock,1}, op::AbstractBlock)
+@inline function getNdiff(psifunc::Function, parGates::Array{AbstractBlock,1}, op::AbstractBlock; δ::Real=0.01)
     grads = getNdiff.(psifunc, parGates, Ref(op))
 end
 
