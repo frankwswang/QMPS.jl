@@ -265,8 +265,8 @@ end
         dispatch!(-, dGates[i], (del,))
         tg[i] = (psi2 - psi1) / (2del)
     end
-    @test qg == qg_m2
-    @test ng == ng_m2
+    @test qg ≈ qg_m2
+    @test ng ≈ ng_m2
     @test tg ≈ qg
     @test ng ≈ qg
 end
