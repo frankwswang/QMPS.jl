@@ -254,6 +254,8 @@ end
     dGates = collect_blocks(QMPS.QDiff, c2)
     qg = getQdiff!.(()->(copy(reg) |> c2), dGates, Ref(op))
     ng = getNdiff.(()->(copy(reg) |> c2), dGates, Ref(op), δ=del)
+    qg_m2 = getQdiff!(()->(copy(reg) |> c2), dGates, op)
+    ng_m2 = getNdiff(()->(copy(reg) |> c2), dGates, op, δ=del)
     tg = zeros(length(dGates))
     for i = 1:length(dGates)
         dispatch!(-, dGates[i], (del,))
@@ -263,6 +265,8 @@ end
         dispatch!(-, dGates[i], (del,))
         tg[i] = (psi2 - psi1) / (2del)
     end
+    @test qg == qg_m2
+    @test ng == ng_m2
     @test tg ≈ qg
     @test ng ≈ qg
 end
