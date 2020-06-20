@@ -85,7 +85,7 @@ Numerical Operator differentiation. When only apply `getNdiff!` to one different
     grad = (r2 - r1) / (2δ)
 end
 @inline function getNdiff(psifunc::Function, parGates::Array{AbstractBlock,1}, op::AbstractBlock; δ::Real=0.01)
-    grads = getNdiff.(psifunc, parGates, Ref(op))
+    grads = getNdiff.(psifunc, parGates, Ref(op), δ=δ)
 end
 
 @inline function _perturb(func, gate::AbstractBlock, δ::Real)
