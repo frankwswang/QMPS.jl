@@ -1,25 +1,26 @@
 #=
 Circuit builders for MPSCircuit.jl.
 =#
-export DCbuilder, MPSbuilder, MPSc
+export DCbuilder, MPSbuilder
 
 
 """
     DCbuilder(nBit::Int64, depth::Int64)
-Structure of elements may needed for a Quantum Differentiable circuit.
+Structure of elements may needed for a Quantum differentiable circuit.
+\n
 \nFields:
 \n`block::ChainBlock`:  The block for 1 depth.
 \n`Cblock::ChainBlock`: The Blocks chained without the structure of head and tail(same depth).
-\n`body::ChainBlock`:   The Differentiable circuit for n depth. 
-\n`head::ChainBlock`:   The "head" of the Differentiable circuit(if directly input bits).
-\n`tail::ChainBlock`:   The "tail" of the Differentiable circuit(2 layers of rotaional gates). 
+\n`body::ChainBlock`:   The differentiable circuit for n depth. 
+\n`head::ChainBlock`:   The "head" of the differentiable circuit(if directly input bits).
+\n`tail::ChainBlock`:   The "tail" of the differentiable circuit(2 layers of rotaional gates). 
 """
 struct DCbuilder
     block::ChainBlock  # The block for 1 depth.
     Cblock::ChainBlock # The Blocks chained without the structure of head and tail(same depth).
-    body::ChainBlock   # The Differentiable circuit for n depth. 
-    head::ChainBlock   # The "head" of the Differentiable circuit(if directly input bits).
-    tail::ChainBlock   # The "tail" of the Differentiable circuit(2 layers of rotaional gates).
+    body::ChainBlock   # The differentiable circuit for n depth. 
+    head::ChainBlock   # The "head" of the differentiable circuit(if directly input bits).
+    tail::ChainBlock   # The "tail" of the differentiable circuit(2 layers of rotaional gates).
 
     function DCbuilder(nBit::Int64, depth::Int64) #DON'T USE repeat to avoid POINTER side-effect!
         block = chain(nBit, vcat([chain(nBit,[put(nBit, i=>Rz(0)) for i=nBit:-1:1])], 
@@ -41,9 +42,10 @@ end
 
 """
     MPSc{circuit::ChainBlock, cExtend::ChainBlock}
+\n
 Fields:
-\n`circuit::ChainBlock`: MPS-qubit-reusable (QMPS) circuit.
-\n`cExtend::ChainBlock`: MPS-extended circuit.
+\n`circuit::ChainBlock`: QMPS circuit.
+\n`cExtend::ChainBlock`: QMPS-extended circuit.
 """
 struct MPSc
     circuit::ChainBlock # MPS-qubit-reusable circuit. 
@@ -52,19 +54,24 @@ end
 
 
 """
-    MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Tuple{String, Int64}) 
+    MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Union{String, Tuple{String, Int64}}) 
     -> 
     MPSc{circuit::ChainBlock, cExtend::ChainBlock}
-Function for creating different types of MPS circuits. 
-\nSupported types of `blockT`:
-\n1) `blockT = ("DC", depth)` "DC" stands for "Differentiable circuit".
+Function for creating different types of MPS circuits.
+\n`blockT::Union{String, Tuple{String, Int64}}`
+\n1) `blockT = ("DC", depth)`
+\n   "DC" stands for "differentiable circuit".
+\n2) `blockT = "CS"`         
+\n   "CS" stands for "cluster state".
+\n`dBlocksPar::Array{Float64,1}` 
+\n   The array of the parameters (for differentiable blocks) in the circuit.
 """
 function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Union{String, Tuple{String, Int64}}) 
     par2nd = MPSpar(nBitA, vBit, rBit)
     nBlock = par2nd.nBlock
     nBit = par2nd.nBit
     if typeof(blockT) == Tuple{String, Int64}
-        if blockT[1] == "DC" # Differentiable circuit.
+        if blockT[1] == "DC" # differentiable circuit.
             depth = blockT[2]
             swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>SWAP) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
             swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>SWAP) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
