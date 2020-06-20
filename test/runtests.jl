@@ -243,7 +243,7 @@ end
     @test dG[1].mat == mat(dG[1])
     @test (dG[1])' == adjoint(dG[1]) == QMPS.QDiff( adjoint(dG[1].block) )
     
-    # Testing functions getQdiff() and getNdiff().
+    # Testing functions getQdiff!() and getNdiff().
     del = 10e-6 
     seed!(seedNum)
     reg = rand_state(n, nbatch = 1000)
@@ -252,7 +252,7 @@ end
     dispatch!(c2, :random)
     op = put(n, 2=>Z)
     dGates = collect_blocks(QMPS.QDiff, c2)
-    qg = getQdiff.(()->(copy(reg) |> c2), dGates, Ref(op))
+    qg = getQdiff!.(()->(copy(reg) |> c2), dGates, Ref(op))
     ng = getNdiff.(()->(copy(reg) |> c2), dGates, Ref(op), δ=del)
     tg = zeros(length(dGates))
     for i = 1:length(dGates)

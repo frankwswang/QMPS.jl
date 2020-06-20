@@ -1,4 +1,4 @@
-export markDiff, getQdiff, getNdiff
+export markDiff, getQdiff!, getNdiff
 import StatsBase: mean
 
 
@@ -56,32 +56,39 @@ markDiff(block::ControlBlock) = block
 
 
 """
-    getQdiff(psifunc::Function, diffGate::QMPS.QDiff, op::AbstractBlock) -> diffGate.grad::Float64
-Quantum Operator differentiation.
+    getQdiff!(psifunc::Function, diffGate::Union{QMPS.QDiff, Array{QMPS.QDiff,1}}, op::AbstractBlock) -> grad::Union{Float64, Array{Float64, 1}}
+Quantum Operator differentiation. When only apply `getQdiff!` to one differentiable gate, the output satisfies `grad == diffGate.grad`.  
 \n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
 \n `diffGate = collect_blocks(QMPS.QDiff, c)`
 \n `op`: Witness Operator to measure reg.
+\n 
+\nNOTE: `getQdiff!` only modifies the field `grad` of the object in type of `QDiff` and all other fields remain the same.  
 """
-@inline function getQdiff(psifunc::Function, diffGate::QDiff, op::AbstractBlock)
+@inline function getQdiff!(psifunc::Function, diffGate::QDiff, op::AbstractBlock)
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, diffGate, π/2 )
     diffGate.grad = (r2 - r1)/2
+end
+@inline function getQdiff!(psifunc::Function, diffGates::Array{QDiff,1}, op::AbstractBlock)
+    grads = getQdiff!.(psifunc, diffGates, Ref(op))
 end
 
 
 """
-    getNdiff(psifunc::Function, parGate::QMPS.QDiff, op::AbstractBlock; δ::Real=0.01) -> parGate.grad::Float64
-Numerical Operator differentiation.
+    getNdiff(psifunc::Function, parGate::Union{AbstractBlock, Array{AbstractBlock,1}}, op::AbstractBlock; δ::Real=0.01) -> grad::Union{Float64, Array{Float64, 1}}
+Numerical Operator differentiation. When only apply `getNdiff!` to one differentiable gate, the output satisfies `grad == parGate.grad`.
 \n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
 \n `parGate`: Paramterized block(gate) in c.
 \n `op`: Witness Operator to measure reg.
 """
-@inline function getNdiff(psifunc::Function, parGate::QDiff, op::AbstractBlock; δ::Real=0.01)
+@inline function getNdiff(psifunc::Function, parGate::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, parGate, δ )
-    parGate.grad = (r2 - r1) / (2δ)
+    grad = (r2 - r1) / (2δ)
+end
+@inline function getNdiff(psifunc::Function, parGates::Array{AbstractBlock,1}, op::AbstractBlock)
+    grads = getNdiff.(psifunc, parGates, Ref(op))
 end
 
-
-@inline function _perturb(func, gate::QDiff, δ::Real)
+@inline function _perturb(func, gate::AbstractBlock, δ::Real)
     dispatch!(-, gate, (δ,))
     r1 = func()
     dispatch!(+, gate, (2δ,))
@@ -89,3 +96,4 @@ end
     dispatch!(-, gate, (δ,))
     r1, r2
 end
+
