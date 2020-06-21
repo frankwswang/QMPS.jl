@@ -309,11 +309,14 @@ end
     op3s = ops(n2)
     op3_2s = ops(n2, v2)
     length(op2s) == length(op3s)
-    for i=1:length(op2s) 
+    for i=1:length(op2s)
+        ###Diff of a QMPS when iput state is zero state.  
         test_diff!(reg2, c2, op2s[i], del2, :cQMPS)
-        qg2 = test_diff!(reg2, c2, op2_2s[i], del2, :cQMPS) 
+        qg2 = test_diff!(reg2, c2, op2_2s[i], del2, :cQMPS)
+        ###Diff of a MPS extended circuit when iput state is zero state.   
         test_diff!(reg3, c3, op3s[i], del2, :cExtend) 
         qg3 = test_diff!(zero_state(n2), c3, op3_2s[i], del2, :cExtend)
+        ###Compare the Diffs bewteen the QMPS and corresponding MPS extended circuit. 
         for i=1:length(qg2) @test isapprox(qg2[i], qg3[i], atol = 5e-4) end
     end
 end
