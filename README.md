@@ -15,23 +15,23 @@ A quick realization of qubit-efficient quantum circuit architecture of Matrix Pr
 
 ### For constructing QMPS circuits
 
-*`MPSC`: Generate the structure of elements related to a QMPS circuit.
+* `MPSC`: Generate the structure of elements related to a QMPS circuit.
 
-*`MPSpar`: Construct parameters that MPSC needs.
+* `MPSpar`: Construct parameters that MPSC needs.
 
-*`MPSbuilder`: Function for creating different types of MPS circuits.
+* `MPSbuilder`: Function for creating different types of MPS circuits.
 
 ### For differentiable quantum circuits
 
-*`DCbuilder`: Generate the structure of elements may needed for a Quantum differentiable circuit.
+* `DCbuilder`: Generate the structure of elements may needed for a Quantum differentiable circuit.
 
-*`MPSDCpar`: Get the circuit parameters of a differentiable QMPS circuit (QMPS-DC) or of a QMPS-DC extended circuit.
+* `MPSDCpar`: Get the circuit parameters of a differentiable QMPS circuit (QMPS-DC) or of a QMPS-DC extended circuit.
 
-*`markDiff`: Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
+* `markDiff`: Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
 
-*`getQdiff`: [Quantum differentiation.](#jump)
+* `getQdiff`: [Quantum differentiation.](#jump)
 
-*`getNdiff`: Numerical differentiation.
+* `getNdiff`: Numerical differentiation.
 
 For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
 
@@ -51,8 +51,8 @@ __nBlock__|Number of blocks in the QMPS circuit.
 
 ### Environment
 
-*[__Julia 1.3-1.4__](https://julialang.org)
-*[__Yao 0.6__](https://github.com/QuantumBFS/Yao.jl)
+* [__Julia 1.3-1.4__](https://julialang.org)
+* [__Yao 0.6__](https://github.com/QuantumBFS/Yao.jl)
 
 ### Installation
 
@@ -67,9 +67,9 @@ pkg> add https://github.com/frankwswang/QMPS.jl
 
 ## Reference
 
-*[Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309.](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.032309)
+* [Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309.](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.032309)
 
-*[Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational quantum eigensolver with fewer qubits. Physical Review Research, 1(2), 023025.](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.023025)
+* [Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational quantum eigensolver with fewer qubits. Physical Review Research, 1(2), 023025.](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.023025)
 
 ## License
 
