@@ -4,46 +4,36 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/QMPS.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/QMPS-jl)
 [![Coverage](https://codecov.io/gh/frankwswang/QMPS.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/QMPS.jl)
 
-A quick realization of Quantum circuit (QMPS) of Matrix Product States compatible with a quantum simulation framework called [__Yao__](https://github.com/QuantumBFS/Yao.jl).
+A quick realization of qubit-efficient quantum circuit architecture of Matrix Product States (QMPS). This package is an extension package for a quantum simulation framework called [__Yao__](https://github.com/QuantumBFS/Yao.jl).
 
 ## Supported types of MPS
 
 - Cluster state
-- Differentiable circuit constructed state (Support quantum differentiations.)
+- Differentiable circuit constructed state (Support quantum differentiations)
 
 ## Main functions
 
-### `MPSC`
+### For constructing QMPS circuits
 
-Generate the structure of elements related to a QMPS circuit.
+*`MPSC`: Generate the structure of elements related to a QMPS circuit.
 
-### `MPSpar`
+*`MPSpar`: Construct parameters that MPSC needs.
 
-Construct parameters that MPSC needs.
+*`MPSbuilder`: Function for creating different types of MPS circuits.
 
-### `MPSbuilder`
+### For differentiable quantum circuits
 
-Function for creating different types of MPS circuits.
+*`DCbuilder`: Generate the structure of elements may needed for a Quantum differentiable circuit.
 
-### `DCbuilder`
+*`MPSDCpar`: Get the circuit parameters of a differentiable QMPS circuit (QMPS-DC) or of a QMPS-DC extended circuit.
 
-Generate the structure of elements may needed for a Quantum differentiable circuit.
+*`markDiff`: Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
 
-### `MPSDCpar`
+*`getQdiff`: [Quantum differentiation.](#jump)
 
-Get the circuit parameters of a differentiable QMPS circuit (QMPS-DC) or of a QMPS-DC extended circuit.
+*`getNdiff`: Numerical differentiation.
 
-### `markDiff`
-
-Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
-
-### `getQdiff`
-
-[Quantum Operator differentiation.](#jump)
-
-### `getNdiff`
-
-Numerical Operator differentiation.
+For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
 
 ## Fields of struct `MPSC`
 
@@ -57,31 +47,30 @@ __dGates__|Differentiable gates of the QMPS circuit if applicable.
 __nBit__|Number of lines (bits) of the QMPS circuit.
 __nBlock__|Number of blocks in the QMPS circuit.
 
-## Diffrentiable QMPS circuit
-### Using `expect` from 
-```
-
-
-```
-
 ## Setup Guide
-### Julia Environment
-* [__Julia 1.3-1.4__](https://julialang.org)
+
+### Environment
+
+*[__Julia 1.3-1.4__](https://julialang.org)
+*[__Yao 0.6__](https://github.com/QuantumBFS/Yao.jl)
 
 ### Installation
-Please type `]` in Julia REPL to enter [`Pkg` mode](https://julialang.github.io/Pkg.jl/v1.0/index.html), then type:
-```
-pkg> add https://github.com/frankwswang/MPSCircuit.jl
-``` 
-__ATTENTION:__ This packge is dependent on package [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.4.1__. For the future development, you need to check its compatibility if you want to use it with a higher version of __Yao__. 
 
-## Reference
+Please type `]` in Julia REPL to enter [__`Pkg` mode__](https://julialang.github.io/Pkg.jl/v1.0/index.html), then type:
+
+```julia
+pkg> add https://github.com/frankwswang/QMPS.jl
+```
+
 <span id="jump">
 </span>
-* Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309. ([PDF](https://arxiv.org/pdf/1803.00745.pdf))
 
+## Reference
 
-* Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational Quantum Eigensolver with Fewer Qubits. arXiv preprint, [arXiv:1902.02663](https://arxiv.org/abs/1902.02663). ([PDF](https://arxiv.org/pdf/1902.02663.pdf))
+*[Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309.](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.032309)
+
+*[Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational quantum eigensolver with fewer qubits. Physical Review Research, 1(2), 023025.](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.023025)
 
 ## License
+
 __QMPS__ is released under Apache License 2.0.
