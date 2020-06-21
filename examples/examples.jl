@@ -19,7 +19,7 @@ using Yao
 nBitT0 = 6
 depth0 = 4
 # Differentiable circuit
-c0 = DCbuilder(nBitT0, depth0).body |> markDiff
+c0 = DCbuilder(nBitT0, depth0).fullbody |> markDiff
 # QMPS circuit
 c1 = deepcopy(mpsDC.circuit)
 # MPS extended circuit

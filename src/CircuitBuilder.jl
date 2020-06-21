@@ -9,18 +9,18 @@ export DCbuilder, MPSbuilder
 Structure of elements may needed for a Quantum differentiable circuit.
 \n
 \nFields:
-\n`block::ChainBlock`:  The block for 1 depth.
-\n`Cblock::ChainBlock`: The Blocks chained without the structure of head and tail(same depth).
-\n`body::ChainBlock`:   The differentiable circuit for n depth. 
-\n`head::ChainBlock`:   The "head" of the differentiable circuit(if directly input bits).
-\n`tail::ChainBlock`:   The "tail" of the differentiable circuit(2 layers of rotaional gates). 
+\n`block::ChainBlock`:    The block for 1 depth.
+\n`circuit::ChainBlock`:  The standard structure of a differentiable circuit without the modifications on the head and the tail.
+\n`fullbody::ChainBlock`: The modified version of a differentiable circuit with structures of a head and a tail (same number of blocks).
+\n`head::ChainBlock`:     The "head" of the differentiable circuit(if directly input bits).
+\n`tail::ChainBlock`:     The "tail" of the differentiable circuit(2 layers of rotaional gates). 
 """
 struct DCbuilder
-    block::ChainBlock  # The block for 1 depth.
-    Cblock::ChainBlock # The Blocks chained without the structure of head and tail(same depth).
-    body::ChainBlock   # The differentiable circuit for n depth. 
-    head::ChainBlock   # The "head" of the differentiable circuit(if directly input bits).
-    tail::ChainBlock   # The "tail" of the differentiable circuit(2 layers of rotaional gates).
+    block::ChainBlock    # The block for 1 depth.
+    circuit::ChainBlock  # The standard structure of a differentiable circuit without the modifications on the head and the tail..
+    fullbody::ChainBlock # The modified version of a differentiable circuit with structures of a head and a tail (same number of blocks). 
+    head::ChainBlock     # The "head" of the differentiable circuit(if directly input bits).
+    tail::ChainBlock     # The "tail" of the differentiable circuit(2 layers of rotaional gates).
 
     function DCbuilder(nBit::Int64, depth::Int64) #DON'T USE repeat to avoid POINTER side-effect!
         block = chain(nBit, vcat([chain(nBit,[put(nBit, i=>Rz(0)) for i=nBit:-1:1])], 
@@ -76,17 +76,17 @@ function MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::Union{String
             swapV1 = chain(nBit, [put(nBit, (inBit,inBit+1)=>SWAP) for irBit=rBit:-1:1 for inBit=irBit  :(vBit+irBit-1)])
             swap1V = chain(nBit, [put(nBit, (inBit+1,inBit)=>SWAP) for irBit=1:   rBit for inBit=(vBit+irBit-1):-1:irBit])
             MeasureBlock = Measure(nBit, locs=(nBit-vBit+1):nBit, resetto=0)
-            cBlockHead = chain(nBit, chain(nBit, DCbuilder(nBit, depth).Cblock, swapV1) |> markDiff, MeasureBlock)
+            cBlockHead = chain(nBit, chain(nBit, DCbuilder(nBit, depth).circuit, swapV1) |> markDiff, MeasureBlock)
             cBlocks = [cBlockHead]
             cEBlocks = [subroutine( nBitA, cBlockHead[1], (nBitA-rBit-vBit+1):nBitA )]      
             for i=2:nBlock-1
-                cBlockHead = chain(nBit, DCbuilder(nBit, depth).Cblock, swapV1) |> markDiff 
+                cBlockHead = chain(nBit, DCbuilder(nBit, depth).circuit, swapV1) |> markDiff 
                 cBlock =  chain(nBit, chain(nBit, vcat([swap1V], cBlockHead.blocks)), MeasureBlock)
                 push!(cBlocks, cBlock)
                 # push!(cEBlocks, put(nBitA, Tuple((nBitA-i*rBit-vBit+1):(nBitA-(i-1)*rBit),)=>cBlockHead)) #Use `subroutine` instead of `put` for CuYao compatibility and efficiency.
                 push!(cEBlocks, subroutine( nBitA, cBlockHead, (nBitA-i*rBit-vBit+1):(nBitA-(i-1)*rBit) ))
             end
-            cBlockHead = chain(nBit, DCbuilder(nBit, depth).Cblock, swapV1) |> markDiff 
+            cBlockHead = chain(nBit, DCbuilder(nBit, depth).circuit, swapV1) |> markDiff 
             cBlock =  chain(nBit, vcat([swap1V], cBlockHead.blocks))
             push!(cBlocks, cBlock)
             push!(cEBlocks, subroutine( nBitA, cBlockHead, (nBitA-nBlock*rBit-vBit+1):(nBitA-(nBlock-1)*rBit) ))

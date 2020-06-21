@@ -80,8 +80,8 @@ opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
     @test head == dc.head
     @test block == dc.block
     @test tail == dc.tail
-    @test Cblock == dc.Cblock
-    @test body == dc.body 
+    @test Cblock == dc.circuit
+    @test body == dc.fullbody 
 
     # MPSbuilder(nBitA::Int64, vBit::Int64, rBit::Int64, blockT::String)
     ## Preparing section
@@ -288,7 +288,7 @@ end
     n1 = 4
     d1 = 3
     reg1 = rand_state(n1)
-    c1 = DCbuilder(n1,d1).body
+    c1 = DCbuilder(n1,d1).fullbody
     c1 = markDiff(c1)
     dispatch!(c1, :random)
     op1s = ops(n1)
@@ -308,7 +308,7 @@ end
     op2_2s = ops(v2+r2, v2)
     op3s = ops(n2)
     op3_2s = ops(n2, v2)
-    length(op2s) == length(op3s)
+    length(op2s) == length(op3s) == length(op2_2s)
     for i=1:length(op2s)
         ###Diff of a QMPS when iput state is zero state.  
         test_diff!(reg2, c2, op2s[i], del2, :cQMPS)
