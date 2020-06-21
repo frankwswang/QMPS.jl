@@ -242,16 +242,16 @@ end
     @test dG[1].mat == mat(dG[1])
     @test (dG[1])' == adjoint(dG[1]) == QMPS.QDiff( adjoint(dG[1].block) )
     
-    # Testing functions getQdiff!() and getNdiff().
+    # Testing functions getQdiff!() and getNdiff!().
     function test_diff!(reg::ArrayReg, c::CompositeBlock, op::AbstractBlock, del::Float64, tolerantSetting::Symbol)
         dGates = collect_blocks(QMPS.QDiff, c)
         ldG = length(dGates)
         qg = getQdiff!.(()->(copy(reg) |> c), dGates, Ref(op))
         @test qg == [dGates[i].grad for i=1:ldG]
-        ng = getNdiff.(()->(copy(reg) |> c), dGates, Ref(op), δ=del)
+        ng = getNdiff!.(()->(copy(reg) |> c), dGates, Ref(op), δ=del)
         qg_m2 = getQdiff!(()->(copy(reg) |> c), dGates, op)
         @test qg_m2 == [dGates[i].grad for i=1:ldG]
-        ng_m2 = getNdiff(()->(copy(reg) |> c), dGates, op, δ=del)
+        ng_m2 = getNdiff!(()->(copy(reg) |> c), dGates, op, δ=del)
         tg = zeros(ldG)
         for i = 1:ldG
             dispatch!(-, dGates[i], (del,))

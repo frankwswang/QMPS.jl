@@ -1,4 +1,4 @@
-export markDiff, getQdiff!, getNdiff
+export markDiff, getQdiff!, getNdiff!
 import StatsBase: mean
 
 
@@ -62,7 +62,9 @@ Quantum Operator differentiation. When only apply `getQdiff!` to one differentia
 \n `diffGate = collect_blocks(QMPS.QDiff, c)`
 \n `op`: Witness Operator to measure reg.
 \n 
-\nNOTE: `getQdiff!` only modifies the field `grad` of the object in type of `QDiff` and all other fields remain the same.  
+\nNOTE: 
+\n1) `getQdiff!` modifies only the element `grad` inside the field of `QDiff` and all other elements remain the same.  
+\n2) `getQdiff!` does indirectly modify the input qubit `reg` to `reg |> c` when inputting the `psifunc` as an arguement. 
 """
 @inline function getQdiff!(psifunc::Function, diffGate::QDiff, op::AbstractBlock)
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, diffGate, π/2 )
@@ -74,20 +76,22 @@ end
 
 
 """
-    getNdiff(psifunc::Function, parGate::Union{AbstractBlock, Array{AbstractBlock,1}}, op::AbstractBlock; δ::Real=0.01) -> grad::Union{Float64, Array{Float64, 1}}
-Numerical Operator differentiation. When only apply `getNdiff!` to one differentiable gate, the output satisfies `grad == parGate.grad`.
+    getNdiff!(psifunc::Function, parGate::Union{AbstractBlock, Array{AbstractBlock,1}}, op::AbstractBlock; δ::Real=0.01) -> grad::Union{Float64, Array{Float64, 1}}
+Numerical Operator differentiation. When only apply `getNdiff!!` to one differentiable gate, the output satisfies `grad == parGate.grad`.
 \n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
 \n `parGate`: Paramterized block(gate) in c.
 \n `op`: Witness Operator to measure reg.
 \n
-\nNOTE: When applying `getNdiff` to QMPS-DC or similar differentiable MPS circuits, the accuracy of the function will get much worse if you set `δ` to be too small (<1e-3).
+\nNOTE: 
+\n1) When applying `getNdiff!` to QMPS-DC or similar differentiable MPS circuits, the accuracy of the function can get much worse if you set `δ` to be too small (<1e-3).
+\n2) `getNdiff!` indirectly modifies the input qubit `reg` to `reg |> c` when inputting the `psifunc` as an arguement.
 """
-@inline function getNdiff(psifunc::Function, parGate::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
+@inline function getNdiff!(psifunc::Function, parGate::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, parGate, δ )
     grad = (r2 - r1) / (2δ)
 end
-@inline function getNdiff(psifunc::Function, parGates::Array{<:AbstractBlock,1}, op::AbstractBlock; δ::Real=0.01)
-    grads = getNdiff.(psifunc, parGates, Ref(op), δ=δ)
+@inline function getNdiff!(psifunc::Function, parGates::Array{<:AbstractBlock,1}, op::AbstractBlock; δ::Real=0.01)
+    grads = getNdiff!.(psifunc, parGates, Ref(op), δ=δ)
 end
 
 @inline function _perturb(func, gate::AbstractBlock, δ::Real)
