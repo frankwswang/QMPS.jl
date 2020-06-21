@@ -1,3 +1,5 @@
+push!(LOAD_PATH, abspath("./src"))
+
 using QMPS
 
 # Creating Cluster-state QMPS circuit.
@@ -19,7 +21,7 @@ using Yao
 nBitT0 = 6
 depth0 = 4
 # Differentiable circuit
-c0 = DCbuilder(nBitT0, depth0).fullbody |> markDiff
+c0 = DCbuilder(nBitT0, depth0).circuit |> markDiff
 # QMPS circuit
 c1 = deepcopy(mpsDC.circuit)
 # MPS extended circuit

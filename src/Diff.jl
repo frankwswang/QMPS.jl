@@ -83,7 +83,7 @@ Numerical Operator differentiation. When only apply `getNdiff!!` to one differen
 \n `op`: Witness Operator to measure reg.
 \n
 \nNOTE: 
-\n1) When applying `getNdiff!` to QMPS-DC or similar differentiable MPS circuits, the accuracy of the function can get much worse if you set `δ` to be too small (<1e-3).
+\n1) When applying `getNdiff!` to QMPS-DC or similar differentiable MPS circuits, the accuracy of the function can get much worse if you set `δ` to be too small (normally when < 1e-1).
 \n2) `getNdiff!` indirectly modifies the input qubit `reg` to `reg |> c` when inputting the `psifunc` as an arguement.
 """
 @inline function getNdiff!(psifunc::Function, parGate::AbstractBlock, op::AbstractBlock; δ::Real=0.01)

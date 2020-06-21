@@ -5,14 +5,6 @@ using Test, Yao
 import Random: seed! 
 import Statistics: mean 
 
-# Common operator functions used by multiple tests.
-opx(n::Int64) = chain(n, [put(n, i=>X) for i=1:n])
-opy(n::Int64) = chain(n, [put(n, i=>Y) for i=1:n])
-opz(n::Int64) = chain(n, [put(n, i=>Z) for i=1:n])
-opVx(n::Int64, V::Int64) = chain(n, [put(n, i=>X) for i=1:V])
-opVy(n::Int64, V::Int64) = chain(n, [put(n, i=>Y) for i=1:V])
-opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
-
 @testset "CircuitBuilder.jl + MPSC.jl" begin
     #####Test Functions#####
     function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
@@ -59,6 +51,13 @@ opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
         @test isapprox(ExpRegry, ExpRegey, atol = 0.5e-2)
         @test isapprox(ExpRegrz, ExpRegez, atol = 0.5e-2)
     end
+
+    opx(n::Int64) = chain(n, [put(n, i=>X) for i=1:n])
+    opy(n::Int64) = chain(n, [put(n, i=>Y) for i=1:n])
+    opz(n::Int64) = chain(n, [put(n, i=>Z) for i=1:n])
+    opVx(n::Int64, V::Int64) = chain(n, [put(n, i=>X) for i=1:V])
+    opVy(n::Int64, V::Int64) = chain(n, [put(n, i=>Y) for i=1:V])
+    opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
 
     #####CircuitBuilder.jl#####
     seedNum = 1234
@@ -222,8 +221,9 @@ opVz(n::Int64, V::Int64) = chain(n, [put(n, i=>Z) for i=1:V])
 end
 
 @testset "Diff.jl" begin
-    seed!(1234)
+    seedNum = 1234
     # Testing basic Yao-compatible functions for QDiff{GT, N} and markDiff(block::AbstractBlock).
+    seed!(seedNum)
     n = 3
     c = chain(n, put(n, 1=>Rx(pi)), put(n, 1=>shift(0)), put(n, 2=>X), control(n, 2, 1=>Ry(0)), control(n, 2, 1=>shift(pi/2)))
     c = markDiff(c)
@@ -243,14 +243,20 @@ end
     @test (dG[1])' == adjoint(dG[1]) == QMPS.QDiff( adjoint(dG[1].block) )
     
     # Testing functions getQdiff!() and getNdiff!().
-    function test_diff!(reg::ArrayReg, c::CompositeBlock, op::AbstractBlock, del::Float64, tolerantSetting::Symbol)
+    ## Define functions.
+    function test_diff!(reg::ArrayReg, C::CompositeBlock, op::AbstractBlock, del::Float64, tolerantSetting::Symbol)
+        c = deepcopy(C)
         dGates = collect_blocks(QMPS.QDiff, c)
         ldG = length(dGates)
+        seed!(seedNum)
         qg = getQdiff!.(()->(copy(reg) |> c), dGates, Ref(op))
         @test qg == [dGates[i].grad for i=1:ldG]
+        seed!(seedNum)
         ng = getNdiff!.(()->(copy(reg) |> c), dGates, Ref(op), δ=del)
+        seed!(seedNum)
         qg_m2 = getQdiff!(()->(copy(reg) |> c), dGates, op)
         @test qg_m2 == [dGates[i].grad for i=1:ldG]
+        seed!(seedNum)
         ng_m2 = getNdiff!(()->(copy(reg) |> c), dGates, op, δ=del)
         tg = zeros(ldG)
         for i = 1:ldG
@@ -271,52 +277,50 @@ end
             @test qg ≈ qg_m2
             @test ng ≈ ng_m2
             @test tg ≈ ng
-            for i=1:ldG @test isapprox(ng[i], qg[i], atol = 1e-5) end
+            for i=1:ldG @test isapprox(ng[i], qg[i], atol = 2e-4) end
         end
         if tolerantSetting == :cQMPS
-             for i=1:ldG @test isapprox(qg[i], qg_m2[i], atol = 2e-3) end
-             for i=1:ldG @test isapprox(ng[i], ng_m2[i], atol = 1e-2) end
-             for i=1:ldG @test isapprox(tg[i], ng[i], atol = 1e-2) end
-             for i=1:ldG @test isapprox(ng[i], qg[i], atol = 1e-2) end
+             for i=1:ldG @test isapprox(ng[i], ng_m2[i], atol = 2e-3) end
+             for i=1:ldG @test isapprox(ng[i], ng_m2[i], atol = 2e-2) end
+             for i=1:ldG @test isapprox(tg[i], ng[i], atol = 2e-2) end
+             for i=1:ldG @test isapprox(ng[i], qg[i], atol = 1e-1) end
         end
         qg
     end
-    ops(n::Int64) = [opx(n), opy(n), opz(n)]
-    ops(n::Int64, v::Int64) = [opVx(n,v), opVy(n,v), opVz(n,v)]
-    ## Testing diffs of a differentiable circuit. 
+    function OP(n::Int64) 
+        seed!(seedNum)
+        res = rand_hermitian(2^n) |> matblock
+    end
+    ## Testing diffs of a differentiable circuit.
+    seed!(seedNum) 
     del1 = 1e-6
     n1 = 4
     d1 = 3
     reg1 = rand_state(n1)
-    c1 = DCbuilder(n1,d1).fullbody
-    c1 = markDiff(c1)
+    c1 = DCbuilder(n1,d1).circuit |> markDiff
     dispatch!(c1, :random)
-    op1s = ops(n1)
-    for i=1:length(op1s) test_diff!(reg1, c1, op1s[i], del1, :dc) end
+    test_diff!(reg1, c1, OP(n1), del1, :dc)
     ## Testing diffs of a QMPS-DC and its extended circuit.
-    del2 = 1e-2
-    d2 = 1
-    n2 = 3
-    v2 = 1
-    r2 = 1 
+    d2 = 2
+    n2 = 4
+    v2 = 2
+    r2 = 1
+    seed!(seedNum)
     qmps = MPSC(("DC", d2), n2, v2, r2)
-    reg2 = zero_state(v2+r2, nbatch=200000)
-    reg3 = rand_state(n2)
     c2 = deepcopy(qmps.circuit)
     c3 = deepcopy(qmps.cExtend)
-    op2s = ops(v2+r2)
-    op2_2s = ops(v2+r2, v2)
-    op3s = ops(n2)
-    op3_2s = ops(n2, v2)
-    length(op2s) == length(op3s) == length(op2_2s)
-    for i=1:length(op2s)
-        ###Diff of a QMPS when iput state is zero state.  
-        test_diff!(reg2, c2, op2s[i], del2, :cQMPS)
-        qg2 = test_diff!(reg2, c2, op2_2s[i], del2, :cQMPS)
-        ###Diff of a MPS extended circuit when iput state is zero state.   
-        test_diff!(reg3, c3, op3s[i], del2, :cExtend) 
-        qg3 = test_diff!(zero_state(n2), c3, op3_2s[i], del2, :cExtend)
-        ###Compare the Diffs bewteen the QMPS and corresponding MPS extended circuit. 
-        for i=1:length(qg2) @test isapprox(qg2[i], qg3[i], atol = 5e-4) end
+    CommonOPs(n::Int64, V::Int64) = [chain(n, [put(n, i=>X) for i=1:V]);
+                                     chain(n, [put(n, i=>Y) for i=1:V]);
+                                     chain(n, [put(n, i=>Z) for i=1:V])]
+    ### Diff of a QMPS when iput state is zero state.
+    qg2 = test_diff!(zero_state(v2+r2, nbatch=100000), c2, OP(v2+r2), 5e-1, :cQMPS)
+    ### Diff of a MPS extended circuit when iput state is zero state.
+    seed!(seedNum)
+    test_diff!(rand_state(n2), c3, OP(n2), 1e-2, :cExtend) 
+    ### Compare the Diffs bewteen the QMPS and corresponding MPS extended circuit.
+    for i=1:3
+        qg2 = test_diff!(zero_state(v2+r2, nbatch=100000), c2, CommonOPs(v2+r2, v2)[i], 5e-1, :cQMPS)
+        qg3 = test_diff!(zero_state(n2), c3, CommonOPs(n2, v2)[i], 1e-2, :cExtend)
+        for i=1:length(qg2) @test isapprox(qg2[i], qg3[i], atol = 2e-3) end
     end
 end
