@@ -79,6 +79,8 @@ Numerical Operator differentiation. When only apply `getNdiff!` to one different
 \n `psifunc = ()-> reg::ArrayReg |> c::ChainBlock`
 \n `parGate`: Paramterized block(gate) in c.
 \n `op`: Witness Operator to measure reg.
+\n
+\nNOTE: When applying `getNdiff` to QMPS-DC or similar differentiable MPS circuits, the accuracy of the function will get much worse if you set `δ` to be too small (<1e-3).
 """
 @inline function getNdiff(psifunc::Function, parGate::AbstractBlock, op::AbstractBlock; δ::Real=0.01)
     r1, r2 = _perturb( ()->mean( Yao.expect(op, psifunc()) ) |> real, parGate, δ )
