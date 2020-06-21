@@ -42,7 +42,7 @@ Base.adjoint(df::QDiff) = QDiff(Yao.content(df)')
 # Convert gates that are differentiable into type `QDiff{GT, N}`.
 """
     markDiff(block::AbstractBlock) -> block::AbstractBlock
-Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
+Return the differentiable gate(s) `QMPS.QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
 """
 ## For Block trees.
 function markDiff(blk::AbstractBlock)

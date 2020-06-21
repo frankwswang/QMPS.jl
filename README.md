@@ -27,7 +27,7 @@ A quick realization of qubit-efficient quantum circuit architecture of Matrix Pr
 
 * `MPSDCpar`: Get the circuit parameters of a differentiable QMPS circuit (QMPS-DC) or of a QMPS-DC extended circuit.
 
-* `markDiff`: Return the differentiable gate(s) `QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
+* `markDiff`: Return the differentiable gate(s) `QMPS.QDiff{GT, N}` from a block or a block tree such as `ChainBlock`.
 
 * `getQdiff`: [Quantum differentiation.](#jump)
 
