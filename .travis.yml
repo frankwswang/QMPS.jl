@@ -16,7 +16,7 @@ cache:
     - ~/.julia/artifacts
 script:
   - while sleep 30; do echo "still alive"; done &
-  - julia -e 'using Pkg; Pkg.test("MPSC");'
+  - julia -e 'using Pkg; Pkg.test("QMPS");'
 jobs:
   fast_finish: true
   # allow_failures:
