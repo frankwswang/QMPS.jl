@@ -18,6 +18,10 @@ jobs:
   fast_finish: true
   # allow_failures:
   #   - julia: 1.3
+
+install: 
+  travis_wait 45 mvn install
+
 after_success:
   - |
     julia -e '
