@@ -33,7 +33,7 @@ A quick realization of qubit-efficient quantum circuit architecture of Matrix Pr
 
 * `getNdiff`: Numerical differentiation.
 
-For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
+_NOTE:_ For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
 
 ## Fields of struct `MPSC`
 
@@ -67,9 +67,9 @@ pkg> add https://github.com/frankwswang/QMPS.jl
 
 ## Reference
 
-* [Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309.](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.032309)
+*Mitarai, K., Negoro, M., Kitagawa, M., & Fujii, K. (2018). Quantum circuit learning. Physical Review A, 98(3), 032309. ([DOI: 10.1103/PhysRevA.98.032309](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.032309))
 
-* [Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational quantum eigensolver with fewer qubits. Physical Review Research, 1(2), 023025.](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.023025)
+*Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational quantum eigensolver with fewer qubits. Physical Review Research, 1(2), 023025. ([DOI: 10.1103/PhysRevResearch.1.023025](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.023025))
 
 ## License
 
