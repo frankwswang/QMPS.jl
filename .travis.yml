@@ -10,9 +10,6 @@ os:
   - osx
   - windows
 
-notifications:
-  email: false
-
 arch:
   - x64
 cache:
