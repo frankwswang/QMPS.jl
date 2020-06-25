@@ -33,7 +33,7 @@ A quick realization of qubit-efficient quantum circuit architecture of Matrix Pr
 
 * `getNdiff`: Numerical differentiation.
 
-_NOTE:_ For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
+__NOTE:__ For more introductions and tutorials about the above functions please check the __examples__ directory in the repository as well as the function documentation using Julia's [__`Help` mode__](https://docs.julialang.org/en/v1/stdlib/REPL/#Help-mode-1).
 
 ## Fields of struct `MPSC`
 
