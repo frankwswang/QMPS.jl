@@ -1,6 +1,6 @@
 name = "QMPS"
 uuid = "c4dd8f60-5e06-11e9-07f8-63d1cb63a4d1"
-authors = ["Frank Ws. Wang <frank.wang.w.s@gmail.com>"]
+authors = ["Weishi Wang <ws.frank.wang@gmail.com>"]
 version = "0.3.3"
 
 [deps]
